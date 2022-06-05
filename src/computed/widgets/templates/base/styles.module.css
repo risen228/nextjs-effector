@@ -1,0 +1,8 @@
+.title {
+  @apply p-4;
+  @apply text-3xl;
+}
+
+.content {
+  @apply p-4;
+}

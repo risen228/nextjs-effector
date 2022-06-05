@@ -1,8 +1,5 @@
-import '../styles/globals.css'
-import type { AppProps } from 'next/app'
+import '@app/shared/ui/globals.css'
+import App from 'next/app'
+import { withEffector } from '@app/shared/lib/effector'
 
-function MyApp({ Component, pageProps }: AppProps) {
-  return <Component {...pageProps} />
-}
-
-export default MyApp
+export default withEffector(App)
