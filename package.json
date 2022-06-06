@@ -9,6 +9,8 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@fontsource/acme": "^4.5.7",
+    "@fontsource/fira-mono": "^4.5.8",
     "axios": "^0.27.2",
     "clsx": "^1.1.1",
     "effector": "^22.3.0",
