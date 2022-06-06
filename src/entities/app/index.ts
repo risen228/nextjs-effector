@@ -1,1 +1,0 @@
-export { appStarted } from './model'

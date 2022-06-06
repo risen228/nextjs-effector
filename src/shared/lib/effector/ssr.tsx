@@ -62,37 +62,46 @@ type StartEvent<
   D extends PreviewData = PreviewData
 > = Event<GetServerSidePropsContext<Q, D>>
 
-export async function getInitialProps<
-  Q extends ParsedUrlQuery = ParsedUrlQuery,
-  D extends PreviewData = PreviewData
->(starts: StartEvent<Q, D>[], context: GetServerSidePropsContext<Q, D>) {
+export async function getInitialProps(
+  events: StartEvent[],
+  params: GetServerSidePropsContext
+) {
   const scope = fork()
-  for (const start of starts)
-    await allSettled(start, { scope, params: context })
+  const promises = events.map((event) => allSettled(event, { scope, params }))
+  await Promise.all(promises)
   return { [INITIAL_STATE_KEY]: serialize(scope) }
 }
 
-export function createGSSP<
-  P extends { [key: string]: any } = { [key: string]: any },
-  Q extends ParsedUrlQuery = ParsedUrlQuery,
-  D extends PreviewData = PreviewData
->(
-  starts: StartEvent<Q, D>[],
-  gssp?: GetServerSideProps<P, Q, D>
-): GetServerSideProps<P, Q, D> {
-  return async function getServerSideProps(context) {
-    const result = gssp ? await gssp(context) : { props: {} as P }
+interface CreateAppGSSPConfig {
+  globalEvents?: StartEvent[]
+}
 
-    const hasProps = 'props' in result
+export function createAppGSSP({ globalEvents = [] }: CreateAppGSSPConfig) {
+  return function createGSSP<
+    P extends { [key: string]: any } = { [key: string]: any },
+    Q extends ParsedUrlQuery = ParsedUrlQuery,
+    D extends PreviewData = PreviewData
+  >(
+    pageEvents: StartEvent<Q, D>[],
+    gssp?: GetServerSideProps<P, Q, D>
+  ): GetServerSideProps<P, Q, D> {
+    return async function getServerSideProps(context) {
+      const result = gssp ? await gssp(context) : { props: {} as P }
 
-    if (!hasProps) {
+      const hasProps = 'props' in result
+
+      if (!hasProps) {
+        return result
+      }
+
+      const initialProps = await getInitialProps(
+        [...globalEvents, ...pageEvents] as StartEvent[],
+        context
+      )
+      result.props = await result.props
+      Object.assign(result.props, initialProps)
+
       return result
     }
-
-    const initialProps = await getInitialProps(starts, context)
-    result.props = await result.props
-    Object.assign(result.props, initialProps)
-
-    return result
   }
 }

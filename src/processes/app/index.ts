@@ -1,0 +1,1 @@
+export { createGSSP } from './gssp'

@@ -1,6 +1,6 @@
 import { createEvent, sample } from 'effector'
 import { GetServerSidePropsContext } from 'next'
-import { loadAuthenticatedUser } from '../authenticated-user'
+import { loadAuthenticatedUser } from '@app/entities/authenticated-user'
 
 export const appStarted = createEvent<GetServerSidePropsContext>()
 

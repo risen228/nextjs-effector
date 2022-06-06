@@ -1,9 +1,8 @@
 import { NextPage } from 'next'
-import { appStarted } from '@app/entities/app'
 import { MyProfilePage, pageStarted } from '@app/pages/my-profile'
-import { createGSSP } from '@app/shared/lib/effector'
+import { createGSSP } from '@app/processes/app'
 
-export const getServerSideProps = createGSSP([appStarted, pageStarted])
+export const getServerSideProps = createGSSP([pageStarted])
 
 const Page: NextPage = () => {
   return <MyProfilePage />
