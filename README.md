@@ -1,34 +1,108 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+## Usage concept
 
-## Getting Started
+At first, you need the `effector/babel-plugin`:
 
-First, run the development server:
-
-```bash
-npm run dev
-# or
-yarn dev
+```json
+{
+  "presets": ["next/babel"],
+  "plugins": [["effector/babel-plugin", { "reactSsr": true }]]
+}
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+By doing that, all our Effector units will be created with unique `sid` constant, so we can safely serialize them for sending to the client. `reactSsr` option is used to replace all `effector-react` imports with `effector-react/scope` version to ensure that `useStore`, `useEvent`, and the other hooks respect the scope that was passed using `Provider`.
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+The second thing you need to do is to enhance your `App` using `withEffector` HOC:
 
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
+```tsx
+/* pages/_app.tsx */
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
+import App from 'next/app'
+import { withEffector } from '@app/shared/lib/effector'
 
-## Learn More
+export default withEffector(App)
+```
 
-To learn more about Next.js, take a look at the following resources:
+Next, assume we have the following Effector events:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- `appStarted` - an event that starts loading the global shared data: user profile, session, and so on
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+- `pageStarted` - an event that starts loading data for the specific page
 
-## Deploy on Vercel
+The second thing you need to do is to create a `getServerSideProps` fabric:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```tsx
+/* @app/processes/app/gssp.ts */
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+import { createAppGSSP } from '@app/shared/lib/effector'
+import { appStarted } from './model'
+
+export const createGSSP = createAppGSSP({
+  /*
+   * Here, pass "appStarted" inside
+   * It will be called on server-side when user requests any page
+   * (including the navigation between pages)
+   * We talk about it later
+   */
+  globalEvents: [appStarted],
+})
+```
+
+After that, you can use `createGSSP` in your pages:
+
+```tsx
+/* pages/profile/index.tsx */
+
+import { NextPage } from 'next'
+import { MyProfilePage, pageStarted } from '@app/pages/my-profile'
+import { createGSSP } from '@app/processes/app'
+
+/*
+ * Here, pass "pageStarted" inside
+ * It will be called on server-side when user requests this page
+ * (including the navigation between pages)
+ */
+export const getServerSideProps = createGSSP([pageStarted])
+
+const Page: NextPage = () => {
+  return <MyProfilePage />
+}
+
+export default Page
+```
+
+Ideally, we want to load the shared data only once, but there are some problems that I didn't solve yet:
+
+- To check if `appStarted` event needs to be executed, we need either to ask it from the client, or persist this data on server. The both ways sound hard to implement.
+- `getServerSideProps`, unlike the `getInitialProps`, is ran only on server-side. The problem is that `pageStarted` logic may depend on global shared data. So, we need either to run `appStarted` on each request (as we do now), or get this global shared data in some other way, for example by sending it back from the client in a serialized form (sounds risky and hard)
+
+## How does it work?
+
+On server side:
+
+1. Take `globalEvents` from `createAppGSSP` call arguments
+2. Take `pageEvents` from `createGSSP` call arguments
+3. Combine them into the single array called `events`
+4. Create the Scope by using `fork()`
+5. Call the events with GSSP Context using `allSettled`
+6. Wait for the `allSettled` promises to be fulfilled
+7. Serialize the Scope and save it inside `pageProps`
+8. On `App` mount, create the new Scope by using the serialized values
+9. Pass the Scope by using `Provider` from `effector-react/scope`
+10. Render everything using provided values
+11. Send result to the client side
+
+On client side:
+
+1. On first `App` mount, create the new Scope from the server-side serialized values
+2. Pass the Scope by using `Provider` from `effector-react/scope`
+3. Render everything using provided values
+4. On user navigation, get the new serialized values from server
+5. Serialize the current Scope, merge the old values with the new values
+6. Use the merged values to create a new Scope
+7. Pass the Scope by using `Provider` from `effector-react/scope`
+8. Render everything again
+
+Problems:
+
+- On user navigation, the `App` gets re-rendered, it may be very slow for a big applications. Most likely, you'll need to use `React.memo` to partially solve this problem
+- On user navigation, we go through some `serialize` / `fork` steps, that may be a little slow. On the other side, `hydrate` is much slower and has some other drawbacks, so actually the solution we're using is not the worst
