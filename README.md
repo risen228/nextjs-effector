@@ -172,7 +172,7 @@ On navigation:
 
 - On user navigation, the `App` gets re-rendered, it may be very slow for a big applications. Most likely, you'll need to use `React.memo` to partially solve this problem
 
-## Why in GSSP, the global events are called on each request?
+## Why in GSSP the global events are called on each request?
 
 `getServerSideProps`, unlike the `getInitialProps`, is ran only on server-side. The problem is that `pageStarted` logic may depend on global shared data. So, we need either to run `appStarted` on each request (as we do now), or get this global shared data in some other way, for example by sending it back from the client in a serialized form (sounds risky and hard)
 
