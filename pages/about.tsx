@@ -1,5 +1,7 @@
 import { GetStaticProps, NextPage } from 'next'
 import { AboutPage } from '@app/pages/about'
+import { appStarted } from '@app/pages/shared/model'
+import { useClientAppEvent } from '@app/shared/lib/effector'
 
 interface Props {
   content: string
@@ -7,6 +9,7 @@ interface Props {
 
 const Page: NextPage<Props> = ({ content }) => {
   console.info('AboutPage: render')
+  useClientAppEvent(appStarted)
   return <AboutPage content={content} />
 }
 

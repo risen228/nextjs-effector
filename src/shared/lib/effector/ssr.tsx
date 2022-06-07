@@ -7,14 +7,15 @@
 
 import {
   allSettled,
+  createEvent,
   createStore,
   Event,
   fork,
+  sample,
   Scope,
   serialize,
-  Store,
 } from 'effector'
-import { Provider } from 'effector-react/scope'
+import { Provider, useEvent } from 'effector-react/scope'
 import {
   GetServerSideProps,
   GetServerSidePropsContext,
@@ -23,7 +24,7 @@ import {
 } from 'next'
 import App, { AppProps } from 'next/app'
 import { ParsedUrlQuery } from 'querystring'
-import { useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 
 // eslint-disable-next-line prettier/prettier
 type AppType<P = {}, CP = {}, S = {}> =
@@ -38,8 +39,10 @@ interface AnyProps {
 }
 
 const isClient = typeof window !== 'undefined'
+const isServer = !isClient
 
-const INITIAL_STATE_KEY = '__EFFECTOR_INITIAL_STATE__'
+const INITIAL_STATE_KEY = '__EFFECTOR_NEXTJS_INITIAL_STATE__'
+const CALLED_MAP_SID = '__EFFECTOR_NEXTJS_CALLED_MAP__'
 
 export type ServerSidePropsEvent<
   Q extends ParsedUrlQuery = ParsedUrlQuery,
@@ -150,21 +153,40 @@ export interface CreateGIPConfig<P> {
 
 // #region Experimental Called State
 
-function createCalledState(event?: Event<any>): Store<boolean> | null {
-  if (!event) return null
+type AnyEvent = Event<any> | Event<void>
+type CalledMap = Record<string, boolean>
+const $calledMap = createStore<CalledMap>({}, { sid: CALLED_MAP_SID })
+const wrappedEventsMap = new Map<AnyEvent, AnyEvent>()
 
-  const $called = createStore(false, { sid: `${event.sid}-called` }).on(
-    event,
-    () => true
-  )
+function wrapAppEvent(event: AnyEvent): AnyEvent {
+  const existingWrapper = wrappedEventsMap.get(event)
+  if (existingWrapper) return existingWrapper
 
-  return $called
+  const wrapper = createEvent<any>()
+
+  $calledMap.on(event, (map) => {
+    if (!event.sid) return map
+    return { ...map, [event.sid]: true }
+  })
+
+  const $hasCalled = $calledMap.map((map) => {
+    if (!event.sid) return false
+    return Boolean(map[event.sid])
+  })
+
+  sample({
+    source: wrapper,
+    filter: $hasCalled.map((is) => !is),
+    target: event,
+  })
+
+  wrappedEventsMap.set(event, wrapper)
+  return wrapper
 }
 
-function checkCalled($called: Store<boolean> | null, scope: Scope | null) {
-  if (!$called) return false
-  if (!scope) return false
-  return scope.getState($called) === true
+function useWrappedAppEvent(appEvent: AnyEvent) {
+  const wrappedAppEvent = useMemo(() => wrapAppEvent(appEvent), [appEvent])
+  return useEvent(wrappedAppEvent)
 }
 
 // #endregion
@@ -172,7 +194,7 @@ function checkCalled($called: Store<boolean> | null, scope: Scope | null) {
 export function createAppGetInitialProps({
   appEvent,
 }: CreateAppGIPConfig = {}) {
-  const $called = createCalledState(appEvent)
+  const wrappedAppEvent = appEvent ? wrapAppEvent(appEvent) : null
 
   return function createGetInitialProps<P extends AnyProps = AnyProps>({
     pageEvent,
@@ -182,9 +204,6 @@ export function createAppGetInitialProps({
       const isEvent = (value: unknown): value is InitialPropsEvent =>
         Boolean(value)
 
-      const isAppEventAlreadyCalled = checkCalled($called, currentScope)
-      const executeAppEvent = !isClient || !isAppEventAlreadyCalled
-
       /*
        * Determine the Effector events to run
        *
@@ -193,7 +212,7 @@ export function createAppGetInitialProps({
        * On client-side, use only page event,
        * as we don't want to run app event again
        */
-      const events = [executeAppEvent && appEvent, pageEvent].filter(isEvent)
+      const events = [wrappedAppEvent, pageEvent].filter(isEvent)
 
       /*
        * Execute resulting Effector events,
@@ -227,7 +246,7 @@ export function createAppGetInitialProps({
 export function useScope(values: Values = {}) {
   const valuesRef = useRef<Values | null>(null)
 
-  if (!isClient) {
+  if (isServer) {
     return fork({ values })
   }
 
@@ -271,4 +290,9 @@ export function withEffector<P = {}, CP = {}, S = {}>(App: AppType<P, CP, S>) {
       </Provider>
     )
   }
+}
+
+export function useClientAppEvent(appEvent: AnyEvent) {
+  const event = useWrappedAppEvent(appEvent)
+  useEffect(() => event(), [event])
 }

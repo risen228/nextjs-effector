@@ -157,6 +157,32 @@ Core points:
 - `appEvent` is executed on each request, including the navigation between pages
 - On navigation, the target page props are received using server request
 
+### Experimental `useClientAppEvent`
+
+Calls `appEvent` when the following conditions are met:
+
+- The client-side environment (otherwise no effect)
+- `appEvent` hasn't been called yet (otherwise no effect)
+
+When conditions are met and hook is got triggered, it also affects the future client-side `getInitialProps` calls. In that case, when the page's `getInitialProps` depends on this event, the `appEvent` execution will be skipped. In other words, the `useClientAppEvent` ensures that `appEvent` is called only once in the entire App lifecycle (including the server-side execution).
+
+The hook may be useful for the `getStaticProps` cases - it allows to keep Next.js optimization and request some global data at the same time.
+
+Usage:
+
+```tsx
+/* pages/about.tsx */
+
+const Page: NextPage<Props> = () => {
+  useClientAppEvent(appStarted)
+  return <AboutPage />
+}
+
+export const getStaticProps: GetStaticProps<Props> = async () => { /* ... */ }
+
+export default Page
+```
+
 ## Custom GIP / GSSP
 
 Both `createGetInitialProps` and `createGetServerSideProps` allow to pass a custom fabric as a second argument. It ran after all required events are executed and their `allSettled` promises are fulfilled. Apart from the Effector Scope, you also have an access to the Next.js context, just like in the default GIP / GSSP.

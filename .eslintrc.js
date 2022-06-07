@@ -10,4 +10,9 @@ module.exports = configure({
     presets.nextJs(),
     presets.effector(),
   ],
+  extend: {
+    rules: {
+      'effector/no-watch': 'off',
+    },
+  },
 })
