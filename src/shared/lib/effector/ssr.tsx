@@ -15,16 +15,19 @@ import App, { AppProps } from 'next/app'
 import { ParsedUrlQuery } from 'querystring'
 import { useRef } from 'react'
 
-type AppType = new (props: AppProps) => App
-type Values = Record<string, unknown>
+// eslint-disable-next-line prettier/prettier
+type AppType<P = {}, CP = {}, S = {}> =
+  new (props: AppProps<P>) => App<P, CP, S>
+
+interface Values {
+  [sid: string]: any
+}
 
 const INITIAL_STATE_KEY = '__EFFECTOR_INITIAL_STATE__'
 
-export function useScope(pageProps: any) {
+export function useScope(values: Values = {}) {
   const valuesRef = useRef<Values | null>(null)
   const clientScopeRef = useRef<Scope | null>(null)
-
-  const values = pageProps[INITIAL_STATE_KEY] ?? {}
 
   if (typeof window === 'undefined') {
     return fork({ values })
@@ -46,44 +49,47 @@ export function useScope(pageProps: any) {
   return clientScopeRef.current
 }
 
-export function withEffector(App: AppType) {
-  return function EnhancedApp(props: AppProps) {
-    const scope = useScope(props.pageProps)
+export function withEffector<P = {}, CP = {}, S = {}>(App: AppType<P, CP, S>) {
+  return function EnhancedApp(props: P & AppProps<CP>) {
+    const { [INITIAL_STATE_KEY]: initialState, ...pageProps } = props.pageProps
+
+    const scope = useScope(initialState)
 
     return (
       <Provider value={scope}>
-        <App {...props} />
+        <App {...props} pageProps={pageProps} />
       </Provider>
     )
   }
 }
 
-type ServerSidePropsEvent<
+export type ServerSidePropsEvent<
   Q extends ParsedUrlQuery = ParsedUrlQuery,
   D extends PreviewData = PreviewData
 > = Event<GetServerSidePropsContext<Q, D>> | Event<void>
 
-type InitialPropsEvent = Event<NextPageContext> | Event<void>
+export type InitialPropsEvent = Event<NextPageContext> | Event<void>
 
-type EffectorInitialProps = {
-  [Key in typeof INITIAL_STATE_KEY]: {
-    [sid: string]: any
-  }
-}
+export type StartEvent = ServerSidePropsEvent<any, any> | InitialPropsEvent
 
-export async function getEffectorInitialProps<TContext>(
+export async function startEffectorModel<TContext>(
   events: Array<Event<TContext> | Event<void>>,
-  context: TContext
-): Promise<EffectorInitialProps> {
-  const scope = fork()
+  context: TContext,
+  values: Values = {}
+) {
+  const scope = fork({ values })
   const promises = events.map((event) =>
     allSettled(event as Event<TContext>, { scope, params: context })
   )
   await Promise.all(promises)
-  return { [INITIAL_STATE_KEY]: serialize(scope) }
+
+  return {
+    scope,
+    props: { [INITIAL_STATE_KEY]: serialize(scope) },
+  }
 }
 
-interface CreateAppGSSPConfig {
+export interface CreateAppGSSPConfig {
   globalEvents?: ServerSidePropsEvent[]
 }
 
@@ -96,55 +102,108 @@ export function createAppGetServerSideProps({
     D extends PreviewData = PreviewData
   >(
     pageEvents: ServerSidePropsEvent<Q, D>[],
-    gssp?: GetServerSideProps<P, Q, D>
+    gsspFabric?: (scope: Scope) => GetServerSideProps<P, Q, D>
   ): GetServerSideProps<P, Q, D> {
     return async function getServerSideProps(context) {
-      const result = gssp ? await gssp(context) : { props: {} as P }
-
-      const hasProps = 'props' in result
-
-      if (!hasProps) {
-        return result
-      }
-
-      const effectorProps = await getEffectorInitialProps(
+      /*
+       * Execute app and page Effector events,
+       * and wait for model to settle
+       */
+      const { scope, props } = await startEffectorModel(
         [...globalEvents, ...pageEvents] as ServerSidePropsEvent[],
         context
       )
-      result.props = await result.props
-      Object.assign(result.props, effectorProps)
 
-      return result
+      /*
+       * Get user's GSSP result
+       * Fallback to empty props object if no custom GSSP used
+       */
+      const gsspResult = gsspFabric
+        ? await gsspFabric(scope)(context)
+        : { props: {} as P }
+
+      const hasProps = 'props' in gsspResult
+
+      /*
+       * Pass 404 and redirects as they are
+       */
+      if (!hasProps) {
+        return gsspResult
+      }
+
+      /*
+       * Mix serialized Effector Scope values into the user props
+       */
+      gsspResult.props = await gsspResult.props
+      Object.assign(gsspResult.props, props)
+
+      return gsspResult
     }
   }
 }
 
-interface CreateAppGIPConfig {
-  globalEvents?: InitialPropsEvent[]
-}
+const scopeMap = new Map<string, Scope>()
 
 type GetInitialProps<P> = (context: NextPageContext) => Promise<P>
 
+export interface CreateAppGIPConfig {
+  namespace?: string
+  globalEvents?: InitialPropsEvent[]
+}
+
 export function createAppGetInitialProps({
+  namespace = 'global',
   globalEvents = [],
 }: CreateAppGIPConfig) {
   return function createGetInitialProps<
     P extends { [key: string]: any } = { [key: string]: any }
   >(
     pageEvents: InitialPropsEvent[],
-    gip?: GetInitialProps<P>
+    gipFabric?: (scope: Scope) => GetInitialProps<P>
   ): GetInitialProps<P> {
     return async function getInitialProps(context) {
-      const props = gip ? await gip(context) : ({} as P)
+      const isClient = typeof window !== 'undefined'
 
-      const events =
-        typeof window === 'undefined'
-          ? [...globalEvents, ...pageEvents]
-          : pageEvents
+      /*
+       * Determine the Effector events to run
+       *
+       * On server-side, use both app and page events
+       *
+       * On client-side, use only page events,
+       * as we don't want to run app events again
+       */
+      const events = isClient ? pageEvents : [...globalEvents, ...pageEvents]
 
-      const effectorProps = await getEffectorInitialProps(events, context)
-      Object.assign(props, effectorProps)
-      return props
+      /*
+       * On client-side, get the current Scope values
+       * They will be added to the newly created Scope before any events execution
+       */
+      const existingScope = scopeMap.get(namespace)
+      const hasValues = isClient && existingScope
+      const values = hasValues ? serialize(existingScope) : {}
+
+      /*
+       * Execute resulting Effector events,
+       * and wait for model to settle
+       */
+      const { scope, props } = await startEffectorModel(events, context, values)
+
+      /*
+       * On client-side, save the newly created Scope inside scopeMap
+       * We need it to access it later - on user navigation
+       */
+      if (isClient) {
+        scopeMap.set(namespace, scope)
+      }
+
+      /*
+       * Get user's GIP props
+       * Fallback to empty object if no custom GIP used
+       */
+      const userProps = gipFabric ? await gipFabric(scope)(context) : ({} as P)
+
+      Object.assign(userProps, props)
+      return userProps
     }
   }
 }
