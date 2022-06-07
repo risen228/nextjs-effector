@@ -142,7 +142,7 @@ export default Page
 
 ## Custom GIP / GSSP
 
-Both `createGetInitialProps` and `createGetServerSideProps` allow to pass a custom fabric as a second argument. It ran after all required events are executed their `allSettled` promises are fulfilled. Apart from the Effector Scope, you also have an access to the Next.js context, just like in the default GIP / GSSP.
+Both `createGetInitialProps` and `createGetServerSideProps` allow to pass a custom fabric as a second argument. It ran after all required events are executed and their `allSettled` promises are fulfilled. Apart from the Effector Scope, you also have an access to the Next.js context, just like in the default GIP / GSSP.
 
 Here you can see the example of the NotFound page implemented using `createGetInitialProps`:
 
