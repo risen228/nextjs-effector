@@ -113,7 +113,9 @@ const Page: NextPage = () => {
   return <MyProfilePage />
 }
 
-Page.getInitialProps = createGetInitialProps({ pageEvent: pageStarted })
+Page.getInitialProps = createGetInitialProps({
+  pageEvent: pageStarted
+})
 
 export default Page
 ```
@@ -142,7 +144,9 @@ const Page: NextPage = () => {
   return <MyProfilePage />
 }
 
-export const getServerSideProps = createGetServerSideProps({ pageEvent: pageStarted })
+export const getServerSideProps = createGetServerSideProps({
+  pageEvent: pageStarted
+})
 
 export default Page
 ```
@@ -291,7 +295,10 @@ You can create GIP / GSSP fabric without `appEvent`, and define the flow manuall
 
 ```tsx
 const createGetInitialProps = createAppGetInitialProps()
-Page.getInitialProps = createGetInitialProps({ pageEvent: pageStarted })
+
+Page.getInitialProps = createGetInitialProps({
+  pageEvent: pageStarted
+})
 
 sample({
   source: pageStarted,
