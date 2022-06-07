@@ -11,7 +11,7 @@ At first, you need the `effector/babel-plugin`:
 
 By doing that, all our Effector units will be created with unique `sid` constant, so we can safely serialize them for sending to the client. `reactSsr` option is used to replace all `effector-react` imports with `effector-react/scope` version to ensure that `useStore`, `useEvent`, and the other hooks respect the scope that was passed using `Provider`.
 
-The second thing you need to do is to enhance your `App` using `withEffector` HOC:
+The second thing you need to do is to enhance your `App` by using `withEffector` HOC:
 
 ```tsx
 /* pages/_app.tsx */
@@ -33,8 +33,6 @@ You can create two fabrics:
 
 - `createGetInitialProps` (recommended for the most cases)
 - `createGetServerSideProps` (usually, used only for edge-cases)
-
-The second thing you need to do is to create a `getServerSideProps` fabric:
 
 ```tsx
 /* @app/processes/app/gssp.ts */
@@ -81,6 +79,62 @@ const Page: NextPage = () => {
 Page.getInitialProps = createGetInitialProps([pageStarted])
 
 // Option #2 (edge-cases)
+export const getServerSideProps = createGetServerSideProps([pageStarted])
+
+export default Page
+```
+
+## API
+
+### `withEffector`
+
+Wraps your `App` with Effector Scope `Provider`. The Scope is created using the serialized values from GIP or GSSP.
+
+```tsx
+export default withEffector(App)
+```
+
+### `createAppGetInitialProps`
+
+Returns a `getInitialProps` fabric.
+
+```tsx
+export const createGetInitialProps = createAppGetInitialProps({
+  namespace: 'my-app', // (optional) Prevents possible conflicts in monorepos
+  globalEvents: [appStarted],
+})
+```
+
+Usage:
+
+```tsx
+const Page: NextPage = () => {
+  return <MyProfilePage />
+}
+
+Page.getInitialProps = createGetInitialProps([pageStarted])
+
+export default Page
+```
+
+### `createAppGetServerSideProps`
+
+Returns a `getServerSideProps` fabric.
+
+```tsx
+export const createGetServerSideProps = createAppGetServerSideProps({
+  namespace: 'my-app', // (optional) Prevents possible conflicts in monorepos
+  globalEvents: [appStarted],
+})
+```
+
+Usage:
+
+```tsx
+const Page: NextPage = () => {
+  return <MyProfilePage />
+}
+
 export const getServerSideProps = createGetServerSideProps([pageStarted])
 
 export default Page
