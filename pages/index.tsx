@@ -1,11 +1,11 @@
 import { NextPage } from 'next'
 import { HomePage, pageStarted } from '@app/pages/home'
-import { createGSSP } from '@app/processes/app'
+import { createGetInitialProps } from '@app/processes/app'
 
-export const getServerSideProps = createGSSP([pageStarted])
-
-const Home: NextPage = () => {
+const Page: NextPage = () => {
   return <HomePage />
 }
 
-export default Home
+Page.getInitialProps = createGetInitialProps([pageStarted])
+
+export default Page

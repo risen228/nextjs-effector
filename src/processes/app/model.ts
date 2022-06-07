@@ -1,8 +1,8 @@
 import { createEvent, sample } from 'effector'
-import { GetServerSidePropsContext } from 'next'
 import { loadAuthenticatedUser } from '@app/entities/authenticated-user'
 
-export const appStarted = createEvent<GetServerSidePropsContext>()
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const appStarted = createEvent<any>()
 
 sample({
   clock: appStarted,

@@ -1,6 +1,6 @@
-import { createAppGSSP } from '@app/shared/lib/effector'
+import { createAppGetServerSideProps } from '@app/shared/lib/effector'
 import { appStarted } from './model'
 
-export const createGSSP = createAppGSSP({
+export const createGetServerSideProps = createAppGetServerSideProps({
   globalEvents: [appStarted],
 })
