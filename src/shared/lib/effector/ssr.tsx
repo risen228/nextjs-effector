@@ -5,7 +5,15 @@
 /* eslint-disable @typescript-eslint/ban-types */
 /* eslint-disable react/jsx-props-no-spreading */
 
-import { allSettled, Event, fork, Scope, serialize } from 'effector'
+import {
+  allSettled,
+  createStore,
+  Event,
+  fork,
+  Scope,
+  serialize,
+  Store,
+} from 'effector'
 import { Provider } from 'effector-react/scope'
 import {
   GetServerSideProps,
@@ -140,9 +148,32 @@ export interface CreateGIPConfig<P> {
   create?: (scope: Scope) => GetInitialProps<P>
 }
 
+// #region Experimental Called State
+
+function createCalledState(event?: Event<any>): Store<boolean> | null {
+  if (!event) return null
+
+  const $called = createStore(false, { sid: `${event.sid}-called` }).on(
+    event,
+    () => true
+  )
+
+  return $called
+}
+
+function checkCalled($called: Store<boolean> | null, scope: Scope | null) {
+  if (!$called) return false
+  if (!scope) return false
+  return scope.getState($called) === true
+}
+
+// #endregion
+
 export function createAppGetInitialProps({
   appEvent,
 }: CreateAppGIPConfig = {}) {
+  const $called = createCalledState(appEvent)
+
   return function createGetInitialProps<P extends AnyProps = AnyProps>({
     pageEvent,
     create,
@@ -150,6 +181,9 @@ export function createAppGetInitialProps({
     return async function getInitialProps(context) {
       const isEvent = (value: unknown): value is InitialPropsEvent =>
         Boolean(value)
+
+      const isAppEventAlreadyCalled = checkCalled($called, currentScope)
+      const executeAppEvent = !isClient || !isAppEventAlreadyCalled
 
       /*
        * Determine the Effector events to run
@@ -159,7 +193,7 @@ export function createAppGetInitialProps({
        * On client-side, use only page event,
        * as we don't want to run app event again
        */
-      const events = [!isClient && appEvent, pageEvent].filter(isEvent)
+      const events = [executeAppEvent && appEvent, pageEvent].filter(isEvent)
 
       /*
        * Execute resulting Effector events,
