@@ -19,6 +19,10 @@ const routes: Route[] = [
     title: 'My Profile',
     path: paths.me(),
   },
+  {
+    title: 'About',
+    path: paths.about(),
+  },
 ]
 
 export function Header() {
