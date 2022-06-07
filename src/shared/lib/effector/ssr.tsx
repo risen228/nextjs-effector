@@ -1,3 +1,5 @@
+/* eslint-disable require-atomic-updates */
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable react/destructuring-assignment */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/ban-types */
@@ -23,45 +25,13 @@ interface Values {
   [sid: string]: any
 }
 
+interface AnyProps {
+  [key: string]: any
+}
+
+const isClient = typeof window !== 'undefined'
+
 const INITIAL_STATE_KEY = '__EFFECTOR_INITIAL_STATE__'
-
-export function useScope(values: Values = {}) {
-  const valuesRef = useRef<Values | null>(null)
-  const clientScopeRef = useRef<Scope | null>(null)
-
-  if (typeof window === 'undefined') {
-    return fork({ values })
-  }
-
-  if (!clientScopeRef.current) {
-    const scope = fork({ values })
-    clientScopeRef.current = scope
-    valuesRef.current = values
-  }
-
-  if (values !== valuesRef.current) {
-    valuesRef.current = values
-    const prev = serialize(clientScopeRef.current)
-    const next = Object.assign({}, prev, values)
-    clientScopeRef.current = fork({ values: next })
-  }
-
-  return clientScopeRef.current
-}
-
-export function withEffector<P = {}, CP = {}, S = {}>(App: AppType<P, CP, S>) {
-  return function EnhancedApp(props: P & AppProps<CP>) {
-    const { [INITIAL_STATE_KEY]: initialState, ...pageProps } = props.pageProps
-
-    const scope = useScope(initialState)
-
-    return (
-      <Provider value={scope}>
-        <App {...props} pageProps={pageProps} />
-      </Provider>
-    )
-  }
-}
 
 export type ServerSidePropsEvent<
   Q extends ParsedUrlQuery = ParsedUrlQuery,
@@ -75,13 +45,13 @@ export type StartEvent = ServerSidePropsEvent<any, any> | InitialPropsEvent
 export async function startEffectorModel<TContext>(
   events: Array<Event<TContext> | Event<void>>,
   context: TContext,
-  values: Values = {}
+  existingScope?: Scope | null
 ) {
-  const scope = fork({ values })
-  const promises = events.map((event) =>
-    allSettled(event as Event<TContext>, { scope, params: context })
-  )
-  await Promise.all(promises)
+  const scope = existingScope ?? fork()
+
+  // Always run events sequentially to prevent any race conditions
+  for (const event of events)
+    await allSettled(event as Event<TContext>, { scope, params: context })
 
   return {
     scope,
@@ -90,36 +60,51 @@ export async function startEffectorModel<TContext>(
 }
 
 export interface CreateAppGSSPConfig {
-  globalEvents?: ServerSidePropsEvent[]
+  appEvent?: ServerSidePropsEvent
+}
+
+export interface CreateGSSPConfig<
+  P extends AnyProps,
+  Q extends ParsedUrlQuery,
+  D extends PreviewData
+> {
+  pageEvent?: ServerSidePropsEvent
+  create?: (scope: Scope) => GetServerSideProps<P, Q, D>
 }
 
 export function createAppGetServerSideProps({
-  globalEvents = [],
-}: CreateAppGSSPConfig) {
+  appEvent,
+}: CreateAppGSSPConfig = {}) {
   return function createGetServerSideProps<
-    P extends { [key: string]: any } = { [key: string]: any },
+    P extends AnyProps = AnyProps,
     Q extends ParsedUrlQuery = ParsedUrlQuery,
     D extends PreviewData = PreviewData
-  >(
-    pageEvents: ServerSidePropsEvent<Q, D>[],
-    gsspFabric?: (scope: Scope) => GetServerSideProps<P, Q, D>
-  ): GetServerSideProps<P, Q, D> {
+  >({ pageEvent, create }: CreateGSSPConfig<P, Q, D> = {}): GetServerSideProps<
+    P,
+    Q,
+    D
+  > {
     return async function getServerSideProps(context) {
+      const isEvent = (value: unknown): value is ServerSidePropsEvent =>
+        Boolean(value)
+
+      /*
+       * In GSSP, always run both "appEvent" and "pageEvent"
+       */
+      const events = [appEvent, pageEvent].filter(isEvent)
+
       /*
        * Execute app and page Effector events,
        * and wait for model to settle
        */
-      const { scope, props } = await startEffectorModel(
-        [...globalEvents, ...pageEvents] as ServerSidePropsEvent[],
-        context
-      )
+      const { scope, props } = await startEffectorModel(events, context)
 
       /*
        * Get user's GSSP result
        * Fallback to empty props object if no custom GSSP used
        */
-      const gsspResult = gsspFabric
-        ? await gsspFabric(scope)(context)
+      const gsspResult = create
+        ? await create(scope)(context)
         : { props: {} as P }
 
       const hasProps = 'props' in gsspResult
@@ -142,68 +127,114 @@ export function createAppGetServerSideProps({
   }
 }
 
-const scopeMap = new Map<string, Scope>()
+let currentScope: Scope | null = null
 
 type GetInitialProps<P> = (context: NextPageContext) => Promise<P>
 
 export interface CreateAppGIPConfig {
-  namespace?: string
-  globalEvents?: InitialPropsEvent[]
+  appEvent?: InitialPropsEvent
+}
+
+export interface CreateGIPConfig<P> {
+  pageEvent?: InitialPropsEvent
+  create?: (scope: Scope) => GetInitialProps<P>
 }
 
 export function createAppGetInitialProps({
-  namespace = 'global',
-  globalEvents = [],
-}: CreateAppGIPConfig) {
-  return function createGetInitialProps<
-    P extends { [key: string]: any } = { [key: string]: any }
-  >(
-    pageEvents: InitialPropsEvent[],
-    gipFabric?: (scope: Scope) => GetInitialProps<P>
-  ): GetInitialProps<P> {
+  appEvent,
+}: CreateAppGIPConfig = {}) {
+  return function createGetInitialProps<P extends AnyProps = AnyProps>({
+    pageEvent,
+    create,
+  }: CreateGIPConfig<P> = {}): GetInitialProps<P> {
     return async function getInitialProps(context) {
-      const isClient = typeof window !== 'undefined'
+      const isEvent = (value: unknown): value is InitialPropsEvent =>
+        Boolean(value)
 
       /*
        * Determine the Effector events to run
        *
        * On server-side, use both app and page events
        *
-       * On client-side, use only page events,
-       * as we don't want to run app events again
+       * On client-side, use only page event,
+       * as we don't want to run app event again
        */
-      const events = isClient ? pageEvents : [...globalEvents, ...pageEvents]
-
-      /*
-       * On client-side, get the current Scope values
-       * They will be added to the newly created Scope before any events execution
-       */
-      const existingScope = scopeMap.get(namespace)
-      const hasValues = isClient && existingScope
-      const values = hasValues ? serialize(existingScope) : {}
+      const events = [!isClient && appEvent, pageEvent].filter(isEvent)
 
       /*
        * Execute resulting Effector events,
        * and wait for model to settle
        */
-      const { scope, props } = await startEffectorModel(events, context, values)
+      const { scope, props } = await startEffectorModel(
+        events,
+        context,
+        currentScope // Use already existing Scope on the client side
+      )
 
       /*
        * On client-side, save the newly created Scope inside scopeMap
-       * We need it to access it later - on user navigation
+       * We need it to access on user navigation (see code above)
        */
       if (isClient) {
-        scopeMap.set(namespace, scope)
+        currentScope = scope
       }
 
       /*
        * Get user's GIP props
        * Fallback to empty object if no custom GIP used
        */
-      const userProps = gipFabric ? await gipFabric(scope)(context) : ({} as P)
+      const userProps = create ? await create(scope)(context) : ({} as P)
 
-      Object.assign(userProps, props)
-      return userProps
+      return Object.assign(userProps, props)
     }
+  }
+}
+
+export function useScope(values: Values = {}) {
+  const valuesRef = useRef<Values | null>(null)
+
+  if (!isClient) {
+    return fork({ values })
+  }
+
+  /*
+   * Client first render
+   * Create the new Scope and save it globally
+   * We need it to be accessable inside getInitialProps
+   */
+  if (!currentScope) {
+    const nextScope = fork({ values })
+
+    currentScope = nextScope
+    valuesRef.current = values
+  }
+
+  /*
+   * Values have changed, most likely it's happened on the user navigation
+   * Create the new Scope from the old one and save it as before
+   */
+  if (values !== valuesRef.current) {
+    const currentValues = serialize(currentScope)
+    const nextValues = Object.assign({}, currentValues, values)
+    const nextScope = fork({ values: nextValues })
+
+    currentScope = nextScope
+    valuesRef.current = values
+  }
+
+  return currentScope
+}
+
+export function withEffector<P = {}, CP = {}, S = {}>(App: AppType<P, CP, S>) {
+  return function EnhancedApp(props: P & AppProps<CP>) {
+    const { [INITIAL_STATE_KEY]: initialState, ...pageProps } = props.pageProps
+
+    const scope = useScope(initialState)
+
+    return (
+      <Provider value={scope}>
+        <App {...props} pageProps={pageProps} />
+      </Provider>
+    )
   }
 }

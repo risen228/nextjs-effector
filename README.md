@@ -35,7 +35,7 @@ You can create two fabrics:
 - `createGetServerSideProps` (usually, used only for edge-cases)
 
 ```tsx
-/* @app/processes/app/gssp.ts */
+/* @app/pages/shared/bindings.ts */
 
 import {
   createAppGetInitialProps,
@@ -47,7 +47,7 @@ export const createGetInitialProps = createAppGetInitialProps({
   /*
    * "appStarted" will be called only on the server side
    */
-  globalEvents: [appStarted],
+  appEvent: appStarted,
 })
 
 export const createGetServerSideProps = createAppGetServerSideProps({
@@ -55,7 +55,7 @@ export const createGetServerSideProps = createAppGetServerSideProps({
    * "appStarted" will be called on each request (including navigation)
    * In case of GSSP it's just like a shortcut
    */
-  globalEvents: [appStarted],
+  appEvent: appStarted,
 })
 ```
 
@@ -88,7 +88,9 @@ export default Page
 
 ### `withEffector`
 
-Wraps your `App` with Effector Scope `Provider`. The Scope is created using the serialized values from GIP or GSSP.
+Wraps your `App` with Effector Scope `Provider`.
+
+The Scope is created using the serialized values from GIP or GSSP.
 
 ```tsx
 export default withEffector(App)
@@ -100,8 +102,7 @@ Returns a `getInitialProps` fabric.
 
 ```tsx
 export const createGetInitialProps = createAppGetInitialProps({
-  namespace: 'my-app', // (optional) Prevents possible conflicts in monorepos
-  globalEvents: [appStarted],
+  appEvent: appStarted,
 })
 ```
 
@@ -112,19 +113,25 @@ const Page: NextPage = () => {
   return <MyProfilePage />
 }
 
-Page.getInitialProps = createGetInitialProps([pageStarted])
+Page.getInitialProps = createGetInitialProps({ pageEvent: pageStarted })
 
 export default Page
 ```
+
+Core points:
+
+- `appEvent` is executed only on the first request
+- On navigation, `pageEvent` is executed on the client-side, without any additional requests
 
 ### `createAppGetServerSideProps`
 
 Returns a `getServerSideProps` fabric.
 
+Most likely, you don't need it.
+
 ```tsx
 export const createGetServerSideProps = createAppGetServerSideProps({
-  namespace: 'my-app', // (optional) Prevents possible conflicts in monorepos
-  globalEvents: [appStarted],
+  appEvent: appStarted,
 })
 ```
 
@@ -135,10 +142,16 @@ const Page: NextPage = () => {
   return <MyProfilePage />
 }
 
-export const getServerSideProps = createGetServerSideProps([pageStarted])
+export const getServerSideProps = createGetServerSideProps({ pageEvent: pageStarted })
 
 export default Page
 ```
+
+Core points:
+
+- Both `appEvent` and `pageEvent` are always executed on the server side
+- `appEvent` is executed on each request, including the navigation between pages
+- On navigation, the target page props are received using server request
 
 ## Custom GIP / GSSP
 
@@ -147,6 +160,8 @@ Both `createGetInitialProps` and `createGetServerSideProps` allow to pass a cust
 Here you can see the example of the NotFound page implemented using `createGetInitialProps`:
 
 ```tsx
+/* pages/profile/[id].tsx */
+
 interface Props {
   notFound?: boolean
 }
@@ -159,15 +174,16 @@ const Page: NextPage<Props> = ({ notFound }) => {
   return <ProfilePage />
 }
 
-Page.getInitialProps = createGetInitialProps<Props>(
-  [pageStarted],
-  (scope) =>
-    async ({ res }) => {
+Page.getInitialProps = createGetInitialProps<Props>({
+  pageEvent: pageStarted,
+  create(scope) {
+    return async ({ res }) => {
       const notFound = scope.getState($userNotFound) === true
       if (notFound && res) res.statusCode = 404
       return { notFound }
     }
-)
+  }
+})
 
 export default Page
 ```
@@ -178,8 +194,8 @@ export default Page
 
 On server side:
 
-1. Take `globalEvents` from `createAppGetInitialProps` call arguments
-2. Take `pageEvents` from `createGetInitialProps` call arguments
+1. Take `appEvent` from `createAppGetInitialProps` call arguments
+2. Take `pageEvent` from `createGetInitialProps` call arguments
 3. Combine them into the single array called `events`
 4. Create the Scope by using `fork()`
 5. Call the events with `NextPageContext` using `allSettled`
@@ -189,32 +205,33 @@ On server side:
 9. Serialize the Scope and merge it into user's `props`
 10. Shared `useScope` logic on App mount:
     1. Create the new Scope using the serialized values
-11. On `App` mount, create the new Scope using the serialized values
-12. Pass the Scope by using `Provider` from `effector-react/scope`
-13. Render everything using the provided values
-14. Send result to the client side
+11. Pass the Scope by using `Provider` from `effector-react/scope`
+12. Render everything using the provided values
+13. Send result to the client side
 
 On client side:
 
 1. Shared `useScope` logic on first App mount:
    1. Create the new Scope from the server-side serialized values
+   2. Save it globally and return
 2. Pass the Scope by using `Provider` from `effector-react/scope`
 3. Render everything using the provided values
 
 On navigation:
 
-1. Take `pageEvents` from `createGetInitialProps` call arguments
-2. Serialize the current Scope
-3. Create the new Scope by using `fork()` with the current Scope values
-4. Call the events with `NextPageContext` using `allSettled`
-5. Wait for the `allSettled` promises to be fulfilled
+1. Take `pageEvent` from `createGetInitialProps` call arguments
+2. Get globally saved Scope
+3. Call `pageEvent` with `NextPageContext` using `allSettled`
+4. Wait for the `allSettled` promise to be fulfilled
+5. Serialize the Scope
 6. Instantiate user's GIP (if fabric present) using the Scope
 7. Call user's GIP
-8. Serialize the new Scope
-9. Shared `useScope` logic:
+8. Merge serialized values into the GIP result and return it
+9. Shared `useScope` logic (required for GSSP compatibility):
    1. Serialize the current Scope
    2. Merge the old values with the new values
    3. Use the merged values to create a new Scope
+   4. Save it globally and return
 10. Pass the Scope by using `Provider` from `effector-react/scope`
 11. Render everything again
 
@@ -222,24 +239,25 @@ On navigation:
 
 On server side:
 
-1. Take `globalEvents` from `createAppGetServerSideProps` call arguments
-2. Take `pageEvents` from `createGetServerSideProps` call arguments
-3. Combine them into the single array called `events`
-4. Create the Scope by using `fork()`
-5. Call the events with GSSP Context using `allSettled`
-6. Wait for the `allSettled` promises to be fulfilled
-7. Instantiate user's GSSP (if fabric present) using the Scope
-8. Call user's GSSP
-9. Serialize the Scope and merge it into user's `pageProps`
-10. Shared `useScope` logic on App mount:
-    1. Create the new Scope using the serialized values
-11. Pass the Scope by using `Provider` from `effector-react/scope`
-12. Render everything using the provided values
-13. Send result to the client side
+1. Take `appEvent` from `createAppGetServerSideProps` call arguments
+2. Take `pageEvent` from `createGetServerSideProps` call arguments
+3. Create the Scope by using `fork()`
+4. Call the events with GSSP Context using `allSettled`
+5. Wait for the `allSettled` promises to be fulfilled
+6. Instantiate user's GSSP (if fabric present) using the Scope
+7. Call user's GSSP
+8. Serialize the Scope and merge it into user's `pageProps`
+9. Shared `useScope` logic on App mount:
+   1. Create the new Scope using the serialized values
+10. Pass the Scope by using `Provider` from `effector-react/scope`
+11. Render everything using the provided values
+12. Send result to the client side
 
 On client side:
 
-1. On first `App` mount, create the new Scope from the server-side serialized values
+1. Shared `useScope` logic on first App mount:
+   1. Create the new Scope from the server-side serialized values
+   2. Save it globally and return
 2. Pass the Scope by using `Provider` from `effector-react/scope`
 3. Render everything using the provided values
 
@@ -251,17 +269,32 @@ On navigation:
    1. Serialize the current Scope
    2. Merge the old values with the new values
    3. Use the merged values to create a new Scope
+   4. Save it globally and return
 4. Pass the Scope by using `Provider` from `effector-react/scope`
 5. Render everything again
 
 ## Problems
 
-- On user navigation, the `App` gets re-rendered, it may be very slow for a big applications. Most likely, you'll need to use `React.memo` to partially solve this problem
+- On user navigation, the entire `App` gets re-rendered, and it may be slow for a big applications. Most likely, you'll need to use `React.memo` to partially solve this problem
 
-## Why in GSSP the global events are called on each request?
+## Why in GSSP the app event are called on each request?
 
 `getServerSideProps`, unlike the `getInitialProps`, is ran only on server-side. The problem is that `pageStarted` logic may depend on global shared data. So, we need either to run `appStarted` on each request (as we do now), or get this global shared data in some other way, for example by sending it back from the client in a serialized form (sounds risky and hard)
 
 Also, to check if `appStarted` event needs to be executed, we need either to ask it from the client, or persist this data on server. The both ways sound hard to implement.
 
-That's why `getInitialProps` is more recommended way to bind your Effector models to Page lifecycle. When navigating between pages, it runs on client side, so we can easily omit global events execution.
+That's why `getInitialProps` is more recommended way to bind your Effector models to Page lifecycle. When navigating between pages, it runs on client side, so we can easily omit the app event execution.
+
+## I need to run appEvent and pageEvent in parallel. How can I do that?
+
+You can create GIP / GSSP fabric without `appEvent`, and define the flow manually:
+
+```tsx
+const createGetInitialProps = createAppGetInitialProps()
+Page.getInitialProps = createGetInitialProps({ pageEvent: pageStarted })
+
+sample({
+  source: pageStarted,
+  target: appStarted
+})
+```
