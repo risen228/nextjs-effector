@@ -98,8 +98,8 @@ On server side:
 4. Create the Scope by using `fork()`
 5. Call the events with `NextPageContext` using `allSettled`
 6. Wait for the `allSettled` promises to be fulfilled
-7. Instantiate user's GSSP (if fabric present) using the Scope
-8. Call user's GSSP
+7. Instantiate user's GIP (if fabric present) using the Scope
+8. Call user's GIP
 9. Serialize the Scope and merge it into user's `props`
 10. Shared `useScope` logic on App mount:
     1. Create the new Scope using the serialized values
