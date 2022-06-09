@@ -1,4 +1,4 @@
-import { BaseTemplate } from '@app/computed/widgets/templates'
+import { BaseTemplate } from '@app/computed/widgets/layouts'
 
 export interface Props {
   content: string

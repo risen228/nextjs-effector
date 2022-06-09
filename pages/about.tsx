@@ -1,15 +1,18 @@
 import { GetStaticProps, NextPage } from 'next'
 import { AboutPage } from '@app/pages/about'
 import { appStarted } from '@app/pages/shared/model'
-import { useClientAppEvent } from '@app/shared/lib/effector'
+import { enhanceNextEvent, useClientNextEvent } from '@app/shared/lib/effector'
 
 interface Props {
   content: string
 }
 
+const enhanced = enhanceNextEvent(appStarted, { runOnce: true })
+
 const Page: NextPage<Props> = ({ content }) => {
   console.info('AboutPage: render')
-  useClientAppEvent(appStarted)
+
+  useClientNextEvent(enhanced)
   return <AboutPage content={content} />
 }
 

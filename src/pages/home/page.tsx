@@ -1,5 +1,5 @@
 import { useStore } from 'effector-react'
-import { BaseTemplate } from '@app/computed/widgets/templates'
+import { BaseTemplate } from '@app/computed/widgets/layouts'
 import { $authenticatedUser } from '@app/entities/authenticated-user'
 
 export function HomePage() {

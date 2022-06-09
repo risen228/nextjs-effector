@@ -8,7 +8,7 @@ export interface Props {
   content: ReactNode
 }
 
-export function BaseTemplate({ header = <Header />, title, content }: Props) {
+export function BaseLayout({ header = <Header />, title, content }: Props) {
   return (
     <>
       {header}

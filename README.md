@@ -45,17 +45,24 @@ import { appStarted } from './model'
 
 export const createGetInitialProps = createAppGetInitialProps({
   /*
-   * "appStarted" will be called only on the server side
+   * Shared events will be called only on the server side
    */
-  appEvent: appStarted,
+  sharedEvents: [appStarted],
+
+  /*
+   * By default, shared events are executed only once in the application lifecycle
+   * You can disable it by passing "false" in "runSharedOnce" option
+   * In that case, shared events will run on each navigation to page that uses them
+   */
+  runSharedOnce: false
 })
 
 export const createGetServerSideProps = createAppGetServerSideProps({
   /*
-   * "appStarted" will be called on each request (including navigation)
+   * Shared events will be called on each request (including navigation)
    * In case of GSSP it's just like a shortcut
    */
-  appEvent: appStarted,
+  sharedEvents: [appStarted],
 })
 ```
 
@@ -76,10 +83,14 @@ const Page: NextPage = () => {
 }
 
 // Option #1 (recommended)
-Page.getInitialProps = createGetInitialProps([pageStarted])
+Page.getInitialProps = createGetInitialProps({
+  pageEvent: pageStarted
+})
 
 // Option #2 (edge-cases)
-export const getServerSideProps = createGetServerSideProps([pageStarted])
+export const getServerSideProps = createGetServerSideProps({
+  pageEvent: pageStarted
+})
 
 export default Page
 ```
@@ -102,7 +113,17 @@ Returns a `getInitialProps` fabric.
 
 ```tsx
 export const createGetInitialProps = createAppGetInitialProps({
-  appEvent: appStarted,
+  /*
+   * Shared events will be called only on the server side
+   */
+  sharedEvents: [appStarted],
+
+  /*
+   * By default, shared events are executed only once in the application lifecycle
+   * You can disable it by passing "false" in "runSharedOnce" option
+   * In that case, shared events will run on each navigation to page that uses them
+   */
+  runSharedOnce: false
 })
 ```
 
@@ -114,6 +135,9 @@ const Page: NextPage = () => {
 }
 
 Page.getInitialProps = createGetInitialProps({
+  /*
+   * Unlike "app-level" GIP, on the "page-level" you can speficify the only one page event
+   */
   pageEvent: pageStarted
 })
 
@@ -133,7 +157,11 @@ Most likely, you don't need it.
 
 ```tsx
 export const createGetServerSideProps = createAppGetServerSideProps({
-  appEvent: appStarted,
+  /*
+   * Shared events will be called on each request (including navigation)
+   * In case of GSSP it's just like a shortcut
+   */
+  sharedEvents: [appStarted],
 })
 ```
 
@@ -145,6 +173,9 @@ const Page: NextPage = () => {
 }
 
 export const getServerSideProps = createGetServerSideProps({
+  /*
+   * Unlike "app-level" GSSP, on the "page-level" you can speficify the only one page event
+   */
   pageEvent: pageStarted
 })
 
@@ -157,24 +188,42 @@ Core points:
 - `appEvent` is executed on each request, including the navigation between pages
 - On navigation, the target page props are received using server request
 
-### Experimental `useClientAppEvent`
+### Experimental `enhanceNextEvent`
 
-Calls `appEvent` when the following conditions are met:
+Wraps your event and adds some logic to it.
 
-- The client-side environment (otherwise no effect)
-- `appEvent` hasn't been called yet (otherwise no effect)
+The enhanced event can be safely used anywhere.
 
-When conditions are met and hook is got triggered, it also affects the future client-side `getInitialProps` calls. In that case, when the page's `getInitialProps` depends on this event, the `appEvent` execution will be skipped. In other words, the `useClientAppEvent` ensures that `appEvent` is called only once in the entire App lifecycle (including the server-side execution).
+It doesn't cause any changes to the original event - you may use it just as before.
+
+```tsx
+const enhanced = enhanceNextEvent(appStarted, {
+  /*
+   * Works like the "runSharedOnce" option in GIP fabric, but for the single event
+   * This option applies to both client and server environments:
+   * If the enhanced event was called on the server side, it won't be called on the client side
+   */
+  runOnce: true
+})
+```
+
+### Experimental `useClientNextEvent`
+
+Calls the provided `NextEvent` with `next/router` context on the client side.
 
 The hook may be useful for the `getStaticProps` cases - it allows to keep Next.js optimization and request some global data at the same time.
+
+You can combine it with `enhanceNextEvent` to run the event only once in the application lifecycle.
 
 Usage:
 
 ```tsx
 /* pages/about.tsx */
 
+const appStartedOnce = enhanceNextEvent(appStarted, { runOnce: true })
+
 const Page: NextPage<Props> = () => {
-  useClientAppEvent(appStarted)
+  useClientAppEvent(appStartedOnce)
   return <AboutPage />
 }
 
@@ -224,7 +273,7 @@ export default Page
 
 On server side:
 
-1. Take `appEvent` from `createAppGetInitialProps` call arguments
+1. Take `sharedEvents` from `createAppGetInitialProps` call arguments
 2. Take `pageEvent` from `createGetInitialProps` call arguments
 3. Combine them into the single array called `events`
 4. Create the Scope by using `fork()`
@@ -269,7 +318,7 @@ On navigation:
 
 On server side:
 
-1. Take `appEvent` from `createAppGetServerSideProps` call arguments
+1. Take `sharedEvents` from `createAppGetServerSideProps` call arguments
 2. Take `pageEvent` from `createGetServerSideProps` call arguments
 3. Create the Scope by using `fork()`
 4. Call the events with GSSP Context using `allSettled`
@@ -315,9 +364,9 @@ Also, to check if `appStarted` event needs to be executed, we need either to ask
 
 That's why `getInitialProps` is more recommended way to bind your Effector models to Page lifecycle. When navigating between pages, it runs on client side, so we can easily omit the app event execution.
 
-## I need to run appEvent and pageEvent in parallel. How can I do that?
+## I need to run sharedEvents and pageEvent in parallel. How can I do that?
 
-You can create GIP / GSSP fabric without `appEvent`, and define the flow manually:
+You can create GIP / GSSP fabric without `sharedEvents`, and define the flow manually:
 
 ```tsx
 const createGetInitialProps = createAppGetInitialProps()
@@ -331,3 +380,5 @@ sample({
   target: appStarted
 })
 ```
+
+Also, you can use `enhanceNextEvent` to run specific events only once in the application lifecycle.

@@ -13,6 +13,7 @@ module.exports = configure({
   extend: {
     rules: {
       'effector/no-watch': 'off',
+      'sonarjs/prefer-single-boolean-return': 'off',
     },
   },
 })
