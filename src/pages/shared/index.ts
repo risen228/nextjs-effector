@@ -1,1 +1,1 @@
-export { createGetInitialProps, createGetServerSideProps } from './bindings'
+export { createGetInitialProps } from './bindings'
