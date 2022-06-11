@@ -301,7 +301,7 @@ export function createAppGetInitialProps({
 
   return function createGetInitialProps<P extends AnyProps = AnyProps>({
     pageEvent,
-    customize: create,
+    customize,
   }: CreateGIPConfig<P> = {}): GetInitialProps<P> {
     return async function getInitialProps(context) {
       /*
@@ -338,7 +338,9 @@ export function createAppGetInitialProps({
        * Get user's GIP props
        * Fallback to empty object if no custom GIP used
        */
-      const userProps = create ? await create({ scope, context }) : ({} as P)
+      const userProps = customize
+        ? await customize({ scope, context })
+        : ({} as P)
 
       return Object.assign(userProps, props)
     }
@@ -367,7 +369,7 @@ export interface CreateGSSPConfig<
   D extends PreviewData
 > {
   pageEvent?: PageEvent<any, any>
-  create?: (
+  customize?: (
     params: CustomizeGSSPParams<Q, D>
   ) => GetServerSidePropsResult<P> | Promise<GetServerSidePropsResult<P>>
 }
@@ -379,11 +381,10 @@ export function createAppGetServerSideProps({
     P extends AnyProps = AnyProps,
     Q extends ParsedUrlQuery = ParsedUrlQuery,
     D extends PreviewData = PreviewData
-  >({ pageEvent, create }: CreateGSSPConfig<P, Q, D> = {}): GetServerSideProps<
-    P,
-    Q,
-    D
-  > {
+  >({
+    pageEvent,
+    customize,
+  }: CreateGSSPConfig<P, Q, D> = {}): GetServerSideProps<P, Q, D> {
     return async function getServerSideProps(context) {
       /*
        * In GSSP, always run both "sharedEvents" and "pageEvent"
@@ -405,8 +406,8 @@ export function createAppGetServerSideProps({
        * Get user's GSSP result
        * Fallback to empty props object if no custom GSSP used
        */
-      const gsspResult = create
-        ? await create({ scope, context })
+      const gsspResult = customize
+        ? await customize({ scope, context })
         : { props: {} as P }
 
       const hasProps = 'props' in gsspResult
@@ -451,7 +452,7 @@ export interface CreateGSPConfig<
   D extends PreviewData
 > {
   pageEvent?: StaticPageEvent<Q, D>
-  create?: (
+  customize?: (
     params: CustomizeGSPParams
   ) => GetStaticPropsResult<P> | Promise<GetStaticPropsResult<P>>
 }
@@ -463,7 +464,7 @@ export function createAppGetStaticProps({
     P extends AnyProps = AnyProps,
     Q extends ParsedUrlQuery = ParsedUrlQuery,
     D extends PreviewData = PreviewData
-  >({ pageEvent, create }: CreateGSPConfig<P, Q, D> = {}): GetStaticProps<
+  >({ pageEvent, customize }: CreateGSPConfig<P, Q, D> = {}): GetStaticProps<
     P,
     Q,
     D
@@ -484,8 +485,8 @@ export function createAppGetStaticProps({
        * Get user's GSP result
        * Fallback to empty props object if no custom GSP used
        */
-      const gspResult = create
-        ? await create({ scope, context })
+      const gspResult = customize
+        ? await customize({ scope, context })
         : { props: {} as P }
 
       const hasProps = 'props' in gspResult
