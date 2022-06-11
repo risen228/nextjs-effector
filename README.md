@@ -293,12 +293,11 @@ const Page: NextPage<Props> = ({ notFound }) => {
 
 Page.getInitialProps = createGetInitialProps<Props>({
   pageEvent: pageStarted,
-  create(scope) {
-    return async ({ res }) => {
-      const notFound = scope.getState($userNotFound) === true
-      if (notFound && res) res.statusCode = 404
-      return { notFound }
-    }
+  customize({ scope, context }) {
+    const { res } = context
+    const notFound = scope.getState($userNotFound) === true
+    if (notFound && res) res.statusCode = 404
+    return { notFound }
   }
 })
 
