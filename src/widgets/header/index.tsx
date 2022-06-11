@@ -23,6 +23,10 @@ const routes: Route[] = [
     title: 'About',
     path: paths.about(),
   },
+  {
+    title: 'About SSG',
+    path: paths.aboutSSG(),
+  },
 ]
 
 export function Header() {

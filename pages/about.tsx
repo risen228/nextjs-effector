@@ -10,7 +10,7 @@ interface Props {
 const enhanced = enhancePageEvent(appStarted, { runOnce: true })
 
 const Page: NextPage<Props> = ({ content }) => {
-  console.info('AboutPage: render')
+  console.info('AboutPage (CSR): render')
 
   useClientPageEvent(enhanced)
   return <AboutPage content={content} />
