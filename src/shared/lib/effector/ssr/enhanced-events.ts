@@ -41,9 +41,15 @@ export function enhancePageEvent<T extends PageContext | StaticPageContext>(
   return enhancedEvent
 }
 
-export function useClientPageEvent(event: PageEvent) {
+export function usePageEvent(
+  event: PageEvent,
+  options: EnhancedEventOptions = {}
+) {
   const router = useRouter()
-  const boundEvent = useEvent(event)
+
+  // the function has a cache inside, so we can safely call it on every render
+  const enhancedEvent = enhancePageEvent(event, options)
+  const boundEvent = useEvent(enhancedEvent)
 
   useEffect(() => {
     const context = ContextNormalizers.router(router)

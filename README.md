@@ -230,7 +230,7 @@ Core points:
 - `sharedEvents` are executed only on the first request
 - On navigation, `pageEvent` is executed on the client-side, without any additional requests
 
-### Experimental `enhancePageEvent`
+### `enhancePageEvent`
 
 Wraps your event and adds some logic to it.
 
@@ -249,21 +249,19 @@ const enhanced = enhancePageEvent(appStarted, {
 })
 ```
 
-### Experimental `useClientPageEvent`
+### `usePageEvent`
 
-Calls the provided `PageEvent` with `next/router` context on the client side.
+Calls the provided `PageEvent` on the client side.
 
-The hook may be useful for the `getStaticProps` cases - it allows to keep Next.js optimization and request some global data at the same time.
+The hook may be useful for the `getStaticProps` cases - it allows to keep Next.js optimization and request some user-specific global data at the same time.
 
-You can combine it with `enhancePageEvent` to run the event only once in the application lifecycle.
+The second parameter is [options to enhance](#enhancepageevent) the event using `enhancePageEvent`.
 
 Usage:
 
 ```tsx
-const appStartedOnce = enhancePageEvent(appStarted, { runOnce: true })
-
 const Page: NextPage<Props> = () => {
-  useClientPageEvent(appStartedOnce)
+  usePageEvent(appStarted, { runOnce: true })
   return <AboutPage />
 }
 

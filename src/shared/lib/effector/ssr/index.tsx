@@ -1,4 +1,4 @@
-export { enhancePageEvent, useClientPageEvent } from './enhanced-events'
+export { enhancePageEvent, usePageEvent } from './enhanced-events'
 export {
   createAppGetInitialProps,
   createAppGetServerSideProps,
