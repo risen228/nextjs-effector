@@ -1,4 +1,4 @@
 import { createEvent } from 'effector'
-import { SharedNextContext } from '@app/shared/lib/effector'
+import { PageContext } from '@app/shared/lib/effector'
 
-export const pageStarted = createEvent<SharedNextContext>()
+export const pageStarted = createEvent<PageContext>()

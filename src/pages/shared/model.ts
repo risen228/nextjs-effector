@@ -1,8 +1,8 @@
 import { createEvent, sample } from 'effector'
 import { loadAuthenticatedUser } from '@app/entities/authenticated-user'
-import { SharedNextContext } from '@app/shared/lib/effector'
+import { PageContext } from '@app/shared/lib/effector'
 
-export const appStarted = createEvent<SharedNextContext>()
+export const appStarted = createEvent<PageContext>()
 
 appStarted.watch(() => console.info('[Events] appStarted'))
 

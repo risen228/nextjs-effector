@@ -284,6 +284,10 @@ export function createAppGetInitialProps({
   sharedEvents = [],
   runSharedOnce = true,
 }: CreateAppGIPConfig = {}) {
+  /*
+   * When "runSharedOnce" is equals to "true",
+   * create enhanced shared events with "runOnce"
+   */
   const wrappedSharedEvents = sharedEvents.map((event) => {
     return enhancePageEvent(event, { runOnce: runSharedOnce })
   })
@@ -296,10 +300,10 @@ export function createAppGetInitialProps({
       /*
        * Determine the Effector events to run
        *
-       * On server-side, use both app and page events
+       * On server-side, use both shared and page events
        *
        * On client-side, use only page event,
-       * as we don't want to run app event again
+       * as we don't want to run shared events again
        */
       const events = [...wrappedSharedEvents, pageEvent].filter(isPageEvent)
 
@@ -365,7 +369,7 @@ export function createAppGetServerSideProps({
   > {
     return async function getServerSideProps(rawContext) {
       /*
-       * In GSSP, always run both "appEvent" and "pageEvent"
+       * In GSSP, always run both "sharedEvents" and "pageEvent"
        */
       const events = [...sharedEvents, pageEvent].filter(isPageEvent)
 
@@ -436,7 +440,7 @@ export function createAppGetStaticProps({
   > {
     return async function getStaticProps(context) {
       /*
-       * In GSSP, always run both "appEvent" and "pageEvent"
+       * In GSP, always run both "sharedEvents" and "pageEvent"
        */
       const events = [...sharedEvents, pageEvent].filter(isStaticPageEvent)
 
@@ -447,8 +451,8 @@ export function createAppGetStaticProps({
       const { scope, props } = await startEffectorModel(events, context)
 
       /*
-       * Get user's GSSP result
-       * Fallback to empty props object if no custom GSSP used
+       * Get user's GSP result
+       * Fallback to empty props object if no custom GSP used
        */
       const gspResult = create
         ? await create(scope)(context)
