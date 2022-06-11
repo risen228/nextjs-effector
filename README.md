@@ -29,20 +29,24 @@ Assume we have the following Effector events:
 - `appStarted` - an event that starts loading the global shared data: user profile, session, and so on
 - `pageStarted` - an event that starts loading data for the specific page
 
-You can create two fabrics:
+```tsx
+import { PageContext, StaticPageContext } from '@app/shared/lib/effector'
+
+export const appStarted = createEvent<PageContext>()
+export const pageStarted = createEvent<PageContext>()
+
+// Also, you can use "StaticPageContext" for static pages events
+export const staticAppStarted = createEvent<StaticPageContext>()
+export const staticPageStarted = createEvent<StaticPageContext>()
+```
+
+You can create three fabrics:
 
 - `createGetInitialProps` (recommended for the most cases)
 - `createGetServerSideProps` (usually, used only for edge-cases)
+- `createGetStaticProps` (used for static-generated pages)
 
 ```tsx
-/* @app/pages/shared/bindings.ts */
-
-import {
-  createAppGetInitialProps,
-  createAppGetServerSideProps
-} from '@app/shared/lib/effector'
-import { appStarted } from './model'
-
 export const createGetInitialProps = createAppGetInitialProps({
   /*
    * Shared events will be called only on the server side
@@ -64,20 +68,18 @@ export const createGetServerSideProps = createAppGetServerSideProps({
    */
   sharedEvents: [appStarted],
 })
+
+export const createGetStaticProps = createAppGetStaticProps({
+  /*
+   * Shared events will be called on each static page creation
+   */
+  sharedEvents: [staticAppStarted],
+})
 ```
 
 After that, you can use it in your pages:
 
 ```tsx
-/* pages/profile/index.tsx */
-
-import { NextPage } from 'next'
-import { MyProfilePage, pageStarted } from '@app/pages/my-profile'
-import {
-  createGetInitialProps,
-  createGetServerSideProps
-} from '@app/processes/app'
-
 const Page: NextPage = () => {
   return <MyProfilePage />
 }
@@ -87,9 +89,14 @@ Page.getInitialProps = createGetInitialProps({
   pageEvent: pageStarted
 })
 
-// Option #2 (edge-cases)
+// Option #2 (very rare edge-cases)
 export const getServerSideProps = createGetServerSideProps({
   pageEvent: pageStarted
+})
+
+// Option #3 (static pages)
+export const getStaticProps = createGetStaticProps({
+  pageEvent: staticPageStarted
 })
 
 export default Page
@@ -146,7 +153,7 @@ export default Page
 
 Core points:
 
-- `appEvent` is executed only on the first request
+- `sharedEvents` are executed only on the first request
 - On navigation, `pageEvent` is executed on the client-side, without any additional requests
 
 ### `createAppGetServerSideProps`
@@ -184,11 +191,46 @@ export default Page
 
 Core points:
 
-- Both `appEvent` and `pageEvent` are always executed on the server side
-- `appEvent` is executed on each request, including the navigation between pages
+- Both `sharedEvents` and `pageEvent` are always executed on the server side
+- `sharedEvents` are executed on each request, including the navigation between pages
 - On navigation, the target page props are received using server request
 
-### Experimental `enhanceNextEvent`
+### `createAppGetStaticProps`
+
+Returns a `getStaticProps` fabric.
+
+```tsx
+export const createGetStaticProps = createAppGetStaticProps({
+  /*
+   * Shared events will be called on each static page generation
+   */
+  sharedEvents: [staticAppStarted],
+})
+```
+
+Usage:
+
+```tsx
+const Page: NextPage = () => {
+  return <MyProfilePage />
+}
+
+export const getStaticProps = createGetStaticProps({
+  /*
+   * Unlike "app-level" GSP, on the "page-level" you can speficify the only one page event
+   */
+  pageEvent: staticPageStarted
+})
+
+export default Page
+```
+
+Core points:
+
+- `sharedEvents` are executed only on the first request
+- On navigation, `pageEvent` is executed on the client-side, without any additional requests
+
+### Experimental `enhancePageEvent`
 
 Wraps your event and adds some logic to it.
 
@@ -197,7 +239,7 @@ The enhanced event can be safely used anywhere.
 It doesn't cause any changes to the original event - you may use it just as before.
 
 ```tsx
-const enhanced = enhanceNextEvent(appStarted, {
+const enhanced = enhancePageEvent(appStarted, {
   /*
    * Works like the "runSharedOnce" option in GIP fabric, but for the single event
    * This option applies to both client and server environments:
@@ -207,23 +249,21 @@ const enhanced = enhanceNextEvent(appStarted, {
 })
 ```
 
-### Experimental `useClientNextEvent`
+### Experimental `useClientPageEvent`
 
-Calls the provided `NextEvent` with `next/router` context on the client side.
+Calls the provided `PageEvent` with `next/router` context on the client side.
 
 The hook may be useful for the `getStaticProps` cases - it allows to keep Next.js optimization and request some global data at the same time.
 
-You can combine it with `enhanceNextEvent` to run the event only once in the application lifecycle.
+You can combine it with `enhancePageEvent` to run the event only once in the application lifecycle.
 
 Usage:
 
 ```tsx
-/* pages/about.tsx */
-
-const appStartedOnce = enhanceNextEvent(appStarted, { runOnce: true })
+const appStartedOnce = enhancePageEvent(appStarted, { runOnce: true })
 
 const Page: NextPage<Props> = () => {
-  useClientAppEvent(appStartedOnce)
+  useClientPageEvent(appStartedOnce)
   return <AboutPage />
 }
 
@@ -239,8 +279,6 @@ Both `createGetInitialProps` and `createGetServerSideProps` allow to pass a cust
 Here you can see the example of the NotFound page implemented using `createGetInitialProps`:
 
 ```tsx
-/* pages/profile/[id].tsx */
-
 interface Props {
   notFound?: boolean
 }
@@ -268,6 +306,8 @@ export default Page
 ```
 
 ## How does it work?
+
+The information may be not actual (it's too hard to update it)
 
 ### GIP flow
 
@@ -381,4 +421,4 @@ sample({
 })
 ```
 
-Also, you can use `enhanceNextEvent` to run specific events only once in the application lifecycle.
+Also, you can use `enhancePageEvent` to run specific events only once in the application lifecycle.

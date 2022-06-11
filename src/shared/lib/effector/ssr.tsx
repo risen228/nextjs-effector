@@ -16,37 +16,48 @@ import {
   serialize,
 } from 'effector'
 import { Provider, useEvent } from 'effector-react/scope'
-import { GetServerSideProps, NextPageContext, PreviewData } from 'next'
-import App, { AppProps } from 'next/app'
-import { useRouter } from 'next/router'
+import {
+  GetServerSideProps,
+  GetServerSidePropsContext,
+  GetStaticProps,
+  GetStaticPropsContext,
+  NextComponentType,
+  NextPageContext,
+  PreviewData,
+} from 'next'
+import { AppContext, AppProps } from 'next/app'
+import { NextRouter, useRouter } from 'next/router'
 import { ParsedUrlQuery } from 'querystring'
 import { useEffect, useRef } from 'react'
 
-export interface SharedNextContext {
+export interface PageContext<
+  Q extends ParsedUrlQuery = ParsedUrlQuery,
+  P extends ParsedUrlQuery = ParsedUrlQuery
+> {
+  route?: string
   pathname: string
-  query: ParsedUrlQuery
+  query: Q
+  params: P
   asPath?: string
+  locale?: string
+  locales?: string[]
+  defaultLocale?: string
 }
 
-export type NextEvent = Event<SharedNextContext> | Event<void>
+export type PageEvent<
+  Q extends ParsedUrlQuery = ParsedUrlQuery,
+  P extends ParsedUrlQuery = ParsedUrlQuery
+> = Event<PageContext<Q, P>>
 
-function isNextEvent(value: unknown): value is NextEvent {
-  return Boolean(value)
-}
+export type StaticPageContext<
+  P extends ParsedUrlQuery = ParsedUrlQuery,
+  D extends PreviewData = PreviewData
+> = GetStaticPropsContext<P, D>
 
-/**
- * It's not possible to use NextEvent in some operations
- * (since it's an union of Events)
- *
- * This problem can be solved by casting the union to the Event with SharedContext payload
- */
-function strict(event: NextEvent): Event<SharedNextContext> {
-  return event as Event<SharedNextContext>
-}
-
-// eslint-disable-next-line prettier/prettier
-type AppType<P = {}, CP = {}, S = {}> =
-  new (props: AppProps<P>) => App<P, CP, S>
+export type StaticPageEvent<
+  P extends ParsedUrlQuery = ParsedUrlQuery,
+  D extends PreviewData = PreviewData
+> = Event<StaticPageContext<P, D>>
 
 interface Values {
   [sid: string]: any
@@ -60,6 +71,74 @@ const isClient = typeof window !== 'undefined'
 const isServer = !isClient
 
 const INITIAL_STATE_KEY = '__EFFECTOR_NEXTJS_INITIAL_STATE__'
+
+function isPageEvent(value: unknown): value is PageEvent {
+  return Boolean(value)
+}
+
+function isStaticPageEvent(value: unknown): value is StaticPageEvent {
+  return Boolean(value)
+}
+
+function normalizeQuery(query: ParsedUrlQuery, route: string) {
+  const onlyQuery: ParsedUrlQuery = {}
+  const onlyParams: ParsedUrlQuery = {}
+
+  for (const [name, value] of Object.entries(query)) {
+    if (!value) continue
+
+    // handle catch and optional catch
+    if (Array.isArray(value) && route.includes(`[...${name}]`)) {
+      onlyParams[name] = value
+      continue
+    }
+
+    if (route.includes(`[${name}]`)) {
+      onlyParams[name] = value
+      continue
+    }
+
+    onlyQuery[name] = value
+  }
+
+  return {
+    params: onlyParams,
+    query: onlyQuery,
+  }
+}
+
+function removeParamsFromQuery(query: ParsedUrlQuery, params: ParsedUrlQuery) {
+  const filteredEntries = Object.entries(query).filter(([key]) => {
+    const hasProperty = Object.prototype.hasOwnProperty.call(params, key)
+    return !hasProperty
+  })
+
+  return Object.fromEntries(filteredEntries)
+}
+
+function buildPathname({ req, resolvedUrl }: GetServerSidePropsContext) {
+  const domain = req.headers.host
+  const protocol = req.headers.referer?.split('://')?.[0] ?? 'https'
+  return `${protocol}://` + domain + resolvedUrl
+}
+
+const ContextNormalizers = {
+  router: (router: NextRouter): PageContext => ({
+    ...router,
+    ...normalizeQuery(router.query, router.route),
+  }),
+  getInitialProps: (context: NextPageContext): PageContext => ({
+    ...context,
+    route: context.pathname,
+    ...normalizeQuery(context.query, context.pathname),
+  }),
+  getServerSideProps: (context: GetServerSidePropsContext): PageContext => ({
+    ...context,
+    params: context.params ?? {},
+    query: removeParamsFromQuery(context.query, context.params ?? {}),
+    pathname: buildPathname(context),
+  }),
+}
 
 // #region Application
 
@@ -102,8 +181,8 @@ export function useScope(values: Values = {}) {
   return currentScope
 }
 
-export function withEffector<P = {}, CP = {}, S = {}>(App: AppType<P, CP, S>) {
-  return function EnhancedApp(props: P & AppProps<CP>) {
+export function withEffector(App: NextComponentType<AppContext, any, any>) {
+  return function EnhancedApp(props: AppProps) {
     const { [INITIAL_STATE_KEY]: initialState, ...pageProps } = props.pageProps
 
     const scope = useScope(initialState)
@@ -120,16 +199,16 @@ export function withEffector<P = {}, CP = {}, S = {}>(App: AppType<P, CP, S>) {
 
 // #region Experimental Enhanced Events and Client Events
 
-export interface NextEventOptions {
+export interface EnhancedEventOptions {
   runOnce?: boolean
 }
 
 const enhancedEventsCache = new Map<string, Event<any>>()
 
-export function enhanceNextEvent(
-  event: NextEvent,
-  options: NextEventOptions = {}
-): Event<SharedNextContext> {
+export function enhancePageEvent<T extends PageContext | StaticPageContext>(
+  event: Event<T>,
+  options: EnhancedEventOptions = {}
+): Event<T> {
   const key = `${event.sid}-${JSON.stringify(options)}`
 
   const cached = enhancedEventsCache.get(key)
@@ -137,9 +216,9 @@ export function enhanceNextEvent(
 
   const { runOnce = false } = options
 
-  const enhancedEvent = createEvent<SharedNextContext>()
+  const enhancedEvent = createEvent<T>()
   const $called = createStore(false, { sid: `${key}/called` })
-  $called.on(strict(event), () => true)
+  $called.on(event, () => true)
 
   sample({
     clock: enhancedEvent,
@@ -149,45 +228,42 @@ export function enhanceNextEvent(
       return true
     },
     fn: (_, payload) => payload,
-    target: strict(event),
+    target: event,
   })
 
   enhancedEventsCache.set(key, enhancedEvent)
   return enhancedEvent
 }
 
-export function useClientNextEvent(event: NextEvent) {
+export function useClientPageEvent(event: PageEvent) {
   const router = useRouter()
-  const scoped = useEvent(strict(event))
+  const boundEvent = useEvent(event)
 
   useEffect(() => {
-    scoped(router)
-  }, [router, scoped])
+    const context = ContextNormalizers.router(router)
+    boundEvent(context)
+  }, [router, boundEvent])
 }
 
 // #endregion
 
 // #region Shared Effector Logic
 
-export async function startEffectorModel<TContext extends SharedNextContext>(
-  events: NextEvent[],
-  context: TContext,
+async function startEffectorModel<T extends PageContext | StaticPageContext>(
+  events: Event<T>[],
+  context: T,
   existingScope?: Scope | null
 ) {
   const scope = existingScope ?? fork()
 
   // Always run events sequentially to prevent any race conditions
   for (const event of events) {
-    await allSettled(event as Event<SharedNextContext>, {
-      scope,
-      params: context,
-    })
+    await allSettled(event, { scope, params: context })
   }
 
-  return {
-    scope,
-    props: { [INITIAL_STATE_KEY]: serialize(scope) },
-  }
+  const props = { [INITIAL_STATE_KEY]: serialize(scope) }
+
+  return { scope, props }
 }
 
 // #endregion
@@ -195,12 +271,12 @@ export async function startEffectorModel<TContext extends SharedNextContext>(
 // #region Get Initial Props
 
 export interface CreateAppGIPConfig {
-  sharedEvents?: NextEvent[]
+  sharedEvents?: PageEvent<any, any>[]
   runSharedOnce?: boolean
 }
 
 export interface CreateGIPConfig<P> {
-  pageEvent?: NextEvent
+  pageEvent?: PageEvent<any, any>
   create?: (scope: Scope) => GetInitialProps<P>
 }
 
@@ -209,14 +285,14 @@ export function createAppGetInitialProps({
   runSharedOnce = true,
 }: CreateAppGIPConfig = {}) {
   const wrappedSharedEvents = sharedEvents.map((event) => {
-    return enhanceNextEvent(event, { runOnce: runSharedOnce })
+    return enhancePageEvent(event, { runOnce: runSharedOnce })
   })
 
   return function createGetInitialProps<P extends AnyProps = AnyProps>({
     pageEvent,
     create,
   }: CreateGIPConfig<P> = {}): GetInitialProps<P> {
-    return async function getInitialProps(context) {
+    return async function getInitialProps(rawContext) {
       /*
        * Determine the Effector events to run
        *
@@ -225,7 +301,9 @@ export function createAppGetInitialProps({
        * On client-side, use only page event,
        * as we don't want to run app event again
        */
-      const events = [...wrappedSharedEvents, pageEvent].filter(isNextEvent)
+      const events = [...wrappedSharedEvents, pageEvent].filter(isPageEvent)
+
+      const context = ContextNormalizers.getInitialProps(rawContext)
 
       /*
        * Execute resulting Effector events,
@@ -249,7 +327,7 @@ export function createAppGetInitialProps({
        * Get user's GIP props
        * Fallback to empty object if no custom GIP used
        */
-      const userProps = create ? await create(scope)(context) : ({} as P)
+      const userProps = create ? await create(scope)(rawContext) : ({} as P)
 
       return Object.assign(userProps, props)
     }
@@ -261,7 +339,7 @@ export function createAppGetInitialProps({
 // #region Get Server Side Props
 
 export interface CreateAppGSSPConfig {
-  sharedEvents?: NextEvent[]
+  sharedEvents?: PageEvent<any, any>[]
 }
 
 export interface CreateGSSPConfig<
@@ -269,7 +347,7 @@ export interface CreateGSSPConfig<
   Q extends ParsedUrlQuery,
   D extends PreviewData
 > {
-  pageEvent?: NextEvent
+  pageEvent?: PageEvent<any, any>
   create?: (scope: Scope) => GetServerSideProps<P, Q, D>
 }
 
@@ -285,33 +363,26 @@ export function createAppGetServerSideProps({
     Q,
     D
   > {
-    return async function getServerSideProps(context) {
+    return async function getServerSideProps(rawContext) {
       /*
        * In GSSP, always run both "appEvent" and "pageEvent"
        */
-      const events = [...sharedEvents, pageEvent].filter(isNextEvent)
+      const events = [...sharedEvents, pageEvent].filter(isPageEvent)
 
-      const sharedContext: SharedNextContext = {
-        get pathname() {
-          const domain = context.req.headers.host
-          return 'https://' + domain + context.resolvedUrl
-        },
-        query: context.query,
-        asPath: context.resolvedUrl,
-      }
+      const context = ContextNormalizers.getServerSideProps(rawContext)
 
       /*
        * Execute app and page Effector events,
        * and wait for model to settle
        */
-      const { scope, props } = await startEffectorModel(events, sharedContext)
+      const { scope, props } = await startEffectorModel(events, context)
 
       /*
        * Get user's GSSP result
        * Fallback to empty props object if no custom GSSP used
        */
       const gsspResult = create
-        ? await create(scope)(context)
+        ? await create(scope)(rawContext)
         : { props: {} as P }
 
       const hasProps = 'props' in gsspResult
@@ -330,6 +401,74 @@ export function createAppGetServerSideProps({
       Object.assign(gsspResult.props, props)
 
       return gsspResult
+    }
+  }
+}
+
+// #endregion
+
+// #region Get Static Props
+
+export interface CreateAppGSPConfig {
+  sharedEvents?: StaticPageEvent<any, any>[]
+}
+
+export interface CreateGSPConfig<
+  P extends AnyProps,
+  Q extends ParsedUrlQuery,
+  D extends PreviewData
+> {
+  pageEvent?: StaticPageEvent<Q, D>
+  create?: (scope: Scope) => GetStaticProps<P, Q, D>
+}
+
+export function createAppGetStaticProps({
+  sharedEvents = [],
+}: CreateAppGSPConfig = {}) {
+  return function createGetStaticProps<
+    P extends AnyProps = AnyProps,
+    Q extends ParsedUrlQuery = ParsedUrlQuery,
+    D extends PreviewData = PreviewData
+  >({ pageEvent, create }: CreateGSPConfig<P, Q, D> = {}): GetStaticProps<
+    P,
+    Q,
+    D
+  > {
+    return async function getStaticProps(context) {
+      /*
+       * In GSSP, always run both "appEvent" and "pageEvent"
+       */
+      const events = [...sharedEvents, pageEvent].filter(isStaticPageEvent)
+
+      /*
+       * Execute app and page Effector events,
+       * and wait for model to settle
+       */
+      const { scope, props } = await startEffectorModel(events, context)
+
+      /*
+       * Get user's GSSP result
+       * Fallback to empty props object if no custom GSSP used
+       */
+      const gspResult = create
+        ? await create(scope)(context)
+        : { props: {} as P }
+
+      const hasProps = 'props' in gspResult
+
+      /*
+       * Pass 404 and redirects as they are
+       */
+      if (!hasProps) {
+        return gspResult
+      }
+
+      /*
+       * Mix serialized Effector Scope values into the user props
+       */
+      Object.assign(gspResult.props, props)
+
+      return gspResult
     }
   }
 }
