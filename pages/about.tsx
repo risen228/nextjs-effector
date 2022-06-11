@@ -1,5 +1,6 @@
-import { GetStaticProps, NextPage } from 'next'
-import { AboutPage } from '@app/pages/about'
+import { NextPage } from 'next'
+import { AboutPage, pageStarted } from '@app/pages/about'
+import { createGetStaticProps } from '@app/pages/shared/bindings'
 import { appStarted } from '@app/pages/shared/model'
 import { enhancePageEvent, useClientPageEvent } from '@app/shared/lib/effector'
 
@@ -9,17 +10,15 @@ interface Props {
 
 const enhanced = enhancePageEvent(appStarted, { runOnce: true })
 
-const Page: NextPage<Props> = ({ content }) => {
+const Page: NextPage<Props> = () => {
   console.info('AboutPage: render')
 
   useClientPageEvent(enhanced)
-  return <AboutPage content={content} />
+  return <AboutPage />
 }
 
-export const getStaticProps: GetStaticProps<Props> = async () => ({
-  props: {
-    content: 'Some static website description',
-  },
+export const getStaticProps = createGetStaticProps({
+  pageEvent: pageStarted,
 })
 
 export default Page

@@ -19,8 +19,10 @@ import { Provider, useEvent } from 'effector-react/scope'
 import {
   GetServerSideProps,
   GetServerSidePropsContext,
+  GetServerSidePropsResult,
   GetStaticProps,
   GetStaticPropsContext,
+  GetStaticPropsResult,
   NextComponentType,
   NextPageContext,
   PreviewData,
@@ -247,7 +249,7 @@ export function useClientPageEvent(event: PageEvent) {
 
 // #endregion
 
-// #region Shared Effector Logic
+// #region Shared Logic And Types
 
 async function startEffectorModel<T extends PageContext | StaticPageContext>(
   events: Event<T>[],
@@ -275,9 +277,14 @@ export interface CreateAppGIPConfig {
   runSharedOnce?: boolean
 }
 
+interface CustomizeGIPParams {
+  scope: Scope
+  context: NextPageContext
+}
+
 export interface CreateGIPConfig<P> {
   pageEvent?: PageEvent<any, any>
-  create?: (scope: Scope) => GetInitialProps<P>
+  customize?: (params: CustomizeGIPParams) => P | Promise<P>
 }
 
 export function createAppGetInitialProps({
@@ -294,9 +301,9 @@ export function createAppGetInitialProps({
 
   return function createGetInitialProps<P extends AnyProps = AnyProps>({
     pageEvent,
-    create,
+    customize: create,
   }: CreateGIPConfig<P> = {}): GetInitialProps<P> {
-    return async function getInitialProps(rawContext) {
+    return async function getInitialProps(context) {
       /*
        * Determine the Effector events to run
        *
@@ -307,7 +314,7 @@ export function createAppGetInitialProps({
        */
       const events = [...wrappedSharedEvents, pageEvent].filter(isPageEvent)
 
-      const context = ContextNormalizers.getInitialProps(rawContext)
+      const normalizedContext = ContextNormalizers.getInitialProps(context)
 
       /*
        * Execute resulting Effector events,
@@ -315,7 +322,7 @@ export function createAppGetInitialProps({
        */
       const { scope, props } = await startEffectorModel(
         events,
-        context,
+        normalizedContext,
         currentScope // Use already existing Scope on the client side
       )
 
@@ -331,7 +338,7 @@ export function createAppGetInitialProps({
        * Get user's GIP props
        * Fallback to empty object if no custom GIP used
        */
-      const userProps = create ? await create(scope)(rawContext) : ({} as P)
+      const userProps = create ? await create({ scope, context }) : ({} as P)
 
       return Object.assign(userProps, props)
     }
@@ -346,13 +353,23 @@ export interface CreateAppGSSPConfig {
   sharedEvents?: PageEvent<any, any>[]
 }
 
+interface CustomizeGSSPParams<
+  Q extends ParsedUrlQuery = ParsedUrlQuery,
+  D extends PreviewData = PreviewData
+> {
+  scope: Scope
+  context: GetServerSidePropsContext<Q, D>
+}
+
 export interface CreateGSSPConfig<
   P extends AnyProps,
   Q extends ParsedUrlQuery,
   D extends PreviewData
 > {
   pageEvent?: PageEvent<any, any>
-  create?: (scope: Scope) => GetServerSideProps<P, Q, D>
+  create?: (
+    params: CustomizeGSSPParams<Q, D>
+  ) => GetServerSidePropsResult<P> | Promise<GetServerSidePropsResult<P>>
 }
 
 export function createAppGetServerSideProps({
@@ -367,26 +384,29 @@ export function createAppGetServerSideProps({
     Q,
     D
   > {
-    return async function getServerSideProps(rawContext) {
+    return async function getServerSideProps(context) {
       /*
        * In GSSP, always run both "sharedEvents" and "pageEvent"
        */
       const events = [...sharedEvents, pageEvent].filter(isPageEvent)
 
-      const context = ContextNormalizers.getServerSideProps(rawContext)
+      const normalizedContext = ContextNormalizers.getServerSideProps(context)
 
       /*
        * Execute app and page Effector events,
        * and wait for model to settle
        */
-      const { scope, props } = await startEffectorModel(events, context)
+      const { scope, props } = await startEffectorModel(
+        events,
+        normalizedContext
+      )
 
       /*
        * Get user's GSSP result
        * Fallback to empty props object if no custom GSSP used
        */
       const gsspResult = create
-        ? await create(scope)(rawContext)
+        ? await create({ scope, context })
         : { props: {} as P }
 
       const hasProps = 'props' in gsspResult
@@ -417,13 +437,23 @@ export interface CreateAppGSPConfig {
   sharedEvents?: StaticPageEvent<any, any>[]
 }
 
+interface CustomizeGSPParams<
+  Q extends ParsedUrlQuery = ParsedUrlQuery,
+  D extends PreviewData = PreviewData
+> {
+  scope: Scope
+  context: GetStaticPropsContext<Q, D>
+}
+
 export interface CreateGSPConfig<
   P extends AnyProps,
   Q extends ParsedUrlQuery,
   D extends PreviewData
 > {
   pageEvent?: StaticPageEvent<Q, D>
-  create?: (scope: Scope) => GetStaticProps<P, Q, D>
+  create?: (
+    params: CustomizeGSPParams
+  ) => GetStaticPropsResult<P> | Promise<GetStaticPropsResult<P>>
 }
 
 export function createAppGetStaticProps({
@@ -455,7 +485,7 @@ export function createAppGetStaticProps({
        * Fallback to empty props object if no custom GSP used
        */
       const gspResult = create
-        ? await create(scope)(context)
+        ? await create({ scope, context })
         : { props: {} as P }
 
       const hasProps = 'props' in gspResult

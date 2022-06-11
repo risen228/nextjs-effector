@@ -18,12 +18,11 @@ const Page: NextPage<Props> = ({ notFound }) => {
 
 Page.getInitialProps = createGetInitialProps<Props>({
   pageEvent: pageStarted,
-  create(scope) {
-    return async ({ res }) => {
-      const notFound = scope.getState($bio) === null
-      if (notFound && res) res.statusCode = 404
-      return { notFound }
-    }
+  customize({ scope, context }) {
+    const { res } = context
+    const notFound = scope.getState($bio) === null
+    if (notFound && res) res.statusCode = 404
+    return { notFound }
   },
 })
 

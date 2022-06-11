@@ -1,9 +1,9 @@
+import { useStore } from 'effector-react'
 import { BaseTemplate } from '@app/computed/widgets/layouts'
+import { $content } from './model'
 
-export interface Props {
-  content: string
-}
+export function AboutPage() {
+  const content = useStore($content)
 
-export function AboutPage({ content }: Props) {
   return <BaseTemplate title="About" content={<p>{content}</p>} />
 }

@@ -1,9 +1,6 @@
 import { GetServerSideProps, NextPage } from 'next'
 import NextErrorPage from 'next/error'
-import { useRouter } from 'next/router'
-import { MyProfilePage, pageStarted } from '@app/pages/my-profile'
-import { $bio } from '@app/pages/my-profile/model'
-import { createGetInitialProps } from '@app/pages/shared'
+import { MyProfilePage } from '@app/pages/my-profile'
 
 interface Props {
   notFound?: boolean
