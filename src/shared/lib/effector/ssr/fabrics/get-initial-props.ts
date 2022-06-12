@@ -19,7 +19,7 @@ interface CustomizeGIPParams {
 }
 
 export interface CreateGIPConfig<P> {
-  pageEvent?: EmptyOrPageEvent
+  pageEvent?: EmptyOrPageEvent<any, any>
   customize?: (params: CustomizeGIPParams) => P | Promise<P>
 }
 
