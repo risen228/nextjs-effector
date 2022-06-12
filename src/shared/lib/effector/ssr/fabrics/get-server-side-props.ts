@@ -9,10 +9,10 @@ import { ParsedUrlQuery } from 'querystring'
 import { ContextNormalizers } from '../context-normalizers'
 import { isPageEvent } from '../shared'
 import { startModel } from '../start-model'
-import { AnyProps, PageEvent } from '../types'
+import { AnyProps, EmptyOrPageEvent } from '../types'
 
 export interface CreateAppGSSPConfig {
-  sharedEvents?: PageEvent<any, any>[]
+  sharedEvents?: EmptyOrPageEvent<any, any>[]
 }
 
 interface CustomizeGSSPParams<
@@ -28,7 +28,7 @@ export interface CreateGSSPConfig<
   Q extends ParsedUrlQuery,
   D extends PreviewData
 > {
-  pageEvent?: PageEvent<any, any>
+  pageEvent?: EmptyOrPageEvent<any, any>
   customize?: (
     params: CustomizeGSSPParams<Q, D>
   ) => GetServerSidePropsResult<P> | Promise<GetServerSidePropsResult<P>>

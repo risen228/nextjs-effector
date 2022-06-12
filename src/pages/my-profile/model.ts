@@ -1,8 +1,7 @@
 import { attach, createEvent, restore, sample } from 'effector'
 import { localApi } from '@app/shared/api'
-import { PageContext } from '@app/shared/lib/effector'
 
-export const pageStarted = createEvent<PageContext>()
+export const pageStarted = createEvent()
 
 const loadBioFx = attach({ effect: localApi.getBioFx })
 

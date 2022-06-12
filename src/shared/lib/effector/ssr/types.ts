@@ -21,6 +21,11 @@ export type PageEvent<
   P extends ParsedUrlQuery = ParsedUrlQuery
 > = Event<PageContext<Q, P>>
 
+export type EmptyOrPageEvent<
+  Q extends ParsedUrlQuery = ParsedUrlQuery,
+  P extends ParsedUrlQuery = ParsedUrlQuery
+> = PageEvent<Q, P> | Event<void>
+
 export type StaticPageContext<
   P extends ParsedUrlQuery = ParsedUrlQuery,
   D extends PreviewData = PreviewData
@@ -30,6 +35,11 @@ export type StaticPageEvent<
   P extends ParsedUrlQuery = ParsedUrlQuery,
   D extends PreviewData = PreviewData
 > = Event<StaticPageContext<P, D>>
+
+export type EmptyOrStaticPageEvent<
+  P extends ParsedUrlQuery = ParsedUrlQuery,
+  D extends PreviewData = PreviewData
+> = StaticPageEvent<P, D> | Event<void>
 
 export interface AnyProps {
   [key: string]: any

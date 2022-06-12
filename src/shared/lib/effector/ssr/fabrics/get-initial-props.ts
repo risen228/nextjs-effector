@@ -3,13 +3,13 @@ import { NextPageContext } from 'next'
 import { ContextNormalizers } from '../context-normalizers'
 import { enhancePageEvent } from '../enhanced-events'
 import { env } from '../env'
-import { isPageEvent } from '../shared'
+import { assertStrict, isPageEvent } from '../shared'
 import { startModel } from '../start-model'
 import { state } from '../state'
-import { AnyProps, GetInitialProps, PageEvent } from '../types'
+import { AnyProps, EmptyOrPageEvent, GetInitialProps } from '../types'
 
 export interface CreateAppGIPConfig {
-  sharedEvents?: PageEvent<any, any>[]
+  sharedEvents?: EmptyOrPageEvent[]
   runSharedOnce?: boolean
 }
 
@@ -19,7 +19,7 @@ interface CustomizeGIPParams {
 }
 
 export interface CreateGIPConfig<P> {
-  pageEvent?: PageEvent<any, any>
+  pageEvent?: EmptyOrPageEvent
   customize?: (params: CustomizeGIPParams) => P | Promise<P>
 }
 
@@ -32,6 +32,7 @@ export function createAppGetInitialProps({
    * create enhanced shared events with "runOnce"
    */
   const wrappedSharedEvents = sharedEvents.map((event) => {
+    assertStrict(event)
     return enhancePageEvent(event, { runOnce: runSharedOnce })
   })
 

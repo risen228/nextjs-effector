@@ -8,10 +8,10 @@ import {
 import { ParsedUrlQuery } from 'querystring'
 import { isStaticPageEvent } from '../shared'
 import { startModel } from '../start-model'
-import { AnyProps, StaticPageEvent } from '../types'
+import { AnyProps, EmptyOrStaticPageEvent } from '../types'
 
 export interface CreateAppGSPConfig {
-  sharedEvents?: StaticPageEvent<any, any>[]
+  sharedEvents?: EmptyOrStaticPageEvent<any, any>[]
 }
 
 interface CustomizeGSPParams<
@@ -27,7 +27,7 @@ export interface CreateGSPConfig<
   Q extends ParsedUrlQuery,
   D extends PreviewData
 > {
-  pageEvent?: StaticPageEvent<Q, D>
+  pageEvent?: EmptyOrStaticPageEvent<Q, D>
   customize?: (
     params: CustomizeGSPParams
   ) => GetStaticPropsResult<P> | Promise<GetStaticPropsResult<P>>

@@ -3,7 +3,8 @@ import { useEvent } from 'effector-react/scope'
 import { useRouter } from 'next/router'
 import { useEffect } from 'react'
 import { ContextNormalizers } from './context-normalizers'
-import { PageContext, PageEvent, StaticPageContext } from './types'
+import { assertStrict } from './shared'
+import { EmptyOrPageEvent, PageContext, StaticPageContext } from './types'
 
 export interface EnhancedEventOptions {
   runOnce?: boolean
@@ -11,10 +12,12 @@ export interface EnhancedEventOptions {
 
 const enhancedEventsCache = new Map<string, Event<any>>()
 
-export function enhancePageEvent<T extends PageContext | StaticPageContext>(
-  event: Event<T>,
+type AnyPayload = PageContext<any, any> | StaticPageContext<any, any> | void
+
+export function enhancePageEvent<P extends AnyPayload>(
+  event: Event<P>,
   options: EnhancedEventOptions = {}
-): Event<T> {
+): Event<P> {
   const key = `${event.sid}-${JSON.stringify(options)}`
 
   const cached = enhancedEventsCache.get(key)
@@ -22,7 +25,7 @@ export function enhancePageEvent<T extends PageContext | StaticPageContext>(
 
   const { runOnce = false } = options
 
-  const enhancedEvent = createEvent<T>()
+  const enhancedEvent = createEvent<P>()
   const $called = createStore(false, { sid: `${key}/called` })
   $called.on(event, () => true)
 
@@ -42,9 +45,11 @@ export function enhancePageEvent<T extends PageContext | StaticPageContext>(
 }
 
 export function usePageEvent(
-  event: PageEvent,
+  event: EmptyOrPageEvent<any, any>,
   options: EnhancedEventOptions = {}
 ) {
+  assertStrict(event)
+
   const router = useRouter()
 
   // the function has a cache inside, so we can safely call it on every render

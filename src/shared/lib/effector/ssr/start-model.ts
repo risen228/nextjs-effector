@@ -2,7 +2,9 @@ import { allSettled, Event, fork, Scope, serialize } from 'effector'
 import { INITIAL_STATE_KEY } from './constants'
 import { PageContext, StaticPageContext } from './types'
 
-export async function startModel<T extends PageContext | StaticPageContext>(
+type AnyPayload = PageContext<any, any> | StaticPageContext<any, any> | void
+
+export async function startModel<T extends AnyPayload>(
   events: Event<T>[],
   context: T,
   existingScope?: Scope | null

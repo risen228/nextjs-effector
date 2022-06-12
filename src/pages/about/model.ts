@@ -1,7 +1,6 @@
 import { createEffect, createEvent, restore, sample } from 'effector'
-import { StaticPageContext } from '@app/shared/lib/effector'
 
-export const pageStarted = createEvent<StaticPageContext>()
+export const pageStarted = createEvent()
 
 const createContentFx = createEffect(() => 'Static Page Content')
 
