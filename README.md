@@ -143,9 +143,17 @@ const Page: NextPage = () => {
 
 Page.getInitialProps = createGetInitialProps({
   /*
-   * Unlike "app-level" GIP, on the "page-level" you can speficify the only one page event
+   * Unlike "app-level" GIP, here you can speficify the only one page event
    */
-  pageEvent: pageStarted
+  pageEvent: pageStarted,
+
+  /*
+   * You can define your custom logic using "customize" function
+   * It's run after all events are settled and Scope is ready to be serialized
+   */
+  customize({ scope, context }) {
+    return { /* Props */ }
+  }
 })
 
 export default Page
@@ -181,9 +189,17 @@ const Page: NextPage = () => {
 
 export const getServerSideProps = createGetServerSideProps({
   /*
-   * Unlike "app-level" GSSP, on the "page-level" you can speficify the only one page event
+   * Unlike "app-level" GSSP, here you can speficify the only one page event
    */
-  pageEvent: pageStarted
+  pageEvent: pageStarted,
+
+  /*
+   * You can define your custom logic using "customize" function
+   * It's run after all events are settled and Scope is ready to be serialized
+   */
+  customize({ scope, context }) {
+    return { /* GSSP Result */ }
+  }
 })
 
 export default Page
@@ -219,7 +235,15 @@ export const getStaticProps = createGetStaticProps({
   /*
    * Unlike "app-level" GSP, on the "page-level" you can speficify the only one page event
    */
-  pageEvent: staticPageStarted
+  pageEvent: staticPageStarted,
+
+  /*
+   * You can define your custom logic using "customize" function
+   * It's run after all events are settled and Scope is ready to be serialized
+   */
+  customize({ scope, context }) {
+    return { /* GSP Result */ }
+  }
 })
 
 export default Page
