@@ -1,3 +1,37 @@
+## Installation
+
+Currently, this is not published in NPM (I'm working on it)
+
+## Usage
+
+### Before you start
+
+At first, add `effector/babel-plugin` to your `.babelrc`:
+
+```json
+{
+  "presets": ["next/babel"],
+  "plugins": [["effector/babel-plugin", { "reactSsr": true }]]
+}
+```
+
+By doing that, all our Effector units will be created with unique `sid` constant, so we can safely serialize them for sending to the client.
+
+The `reactSsr` option is used to replace all `effector-react` imports with `effector-react/scope` version to ensure that `useStore`, `useEvent`, and the other hooks use the scope that was passed using `Provider`.
+
+Next, enhance your `App`:
+
+```tsx
+/* pages/_app.tsx */
+
+import App from 'next/app'
+import { withEffector } from '@app/shared/lib/effector'
+
+export default withEffector(App)
+```
+
+After that, your application will be wrapped in Effector's Scope Provider. The `withEffector` function uses
+
 ## Usage concept
 
 At first, you need the `effector/babel-plugin`:
@@ -47,7 +81,7 @@ You can create three fabrics:
 - `createGSP` (used for static-generated pages)
 
 ```tsx
-export const createGIP = createGipFactory({
+export const createGIP = createGIPFactory({
   /*
    * Shared events will be called only on the server side
    */
@@ -61,7 +95,7 @@ export const createGIP = createGipFactory({
   runSharedOnce: false
 })
 
-export const createGSSP = createGsspFactory({
+export const createGSSP = createGSSPFactory({
   /*
    * Shared events will be called on each request (including navigation)
    * In case of GSSP it's just like a shortcut
@@ -69,7 +103,7 @@ export const createGSSP = createGsspFactory({
   sharedEvents: [appStarted],
 })
 
-export const createGSP = createGspFactory({
+export const createGSP = createGSPFactory({
   /*
    * Shared events will be called on each static page creation
    */
@@ -114,12 +148,12 @@ The Scope is created using the serialized values from GIP or GSSP.
 export default withEffector(App)
 ```
 
-### `createGipFactory`
+### `createGIPFactory`
 
 Returns a `getInitialProps` fabric.
 
 ```tsx
-export const createGIP = createGipFactory({
+export const createGIP = createGIPFactory({
   /*
    * Shared events will be called only on the server side
    */
@@ -164,14 +198,14 @@ Core points:
 - `sharedEvents` are executed only on the first request
 - On navigation, `pageEvent` is executed on the client-side, without any additional requests
 
-### `createGsspFactory`
+### `createGSSPFactory`
 
 Returns a `getServerSideProps` fabric.
 
 Most likely, you don't need it.
 
 ```tsx
-export const createGSSP = createGsspFactory({
+export const createGSSP = createGSSPFactory({
   /*
    * Shared events will be called on each request (including navigation)
    * In case of GSSP it's just like a shortcut
@@ -211,12 +245,12 @@ Core points:
 - `sharedEvents` are executed on each request, including the navigation between pages
 - On navigation, the target page props are received using server request
 
-### `createGspFactory`
+### `createGSPFactory`
 
 Returns a `getStaticProps` fabric.
 
 ```tsx
-export const createGSP = createGspFactory({
+export const createGSP = createGSPFactory({
   /*
    * Shared events will be called on each static page generation
    */
@@ -307,7 +341,7 @@ That's why `getInitialProps` is more recommended way to bind your Effector model
 You can create GIP / GSSP fabric without `sharedEvents`, and define the flow manually:
 
 ```tsx
-const createGIP = createGipFactory()
+const createGIP = createGIPFactory()
 
 Page.getInitialProps = createGIP({
   pageEvent: pageStarted

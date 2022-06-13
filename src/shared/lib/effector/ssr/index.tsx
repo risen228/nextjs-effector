@@ -1,8 +1,8 @@
 export { enhancePageEvent, usePageEvent } from './enhanced-events'
 export {
-  createGipFactory,
-  createGsspFactory,
-  createGspFactory,
+  createGIPFactory,
+  createGSPFactory,
+  createGSSPFactory,
 } from './fabrics'
 export type {
   PageContext,

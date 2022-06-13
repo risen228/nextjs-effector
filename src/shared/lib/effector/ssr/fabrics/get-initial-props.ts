@@ -23,7 +23,7 @@ export interface CreateGIPConfig<P> {
   customize?: (params: CustomizeGIPParams) => P | Promise<P>
 }
 
-export function createGipFactory({
+export function createGIPFactory({
   sharedEvents = [],
   runSharedOnce = true,
 }: CreateAppGIPConfig = {}) {

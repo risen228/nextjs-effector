@@ -34,7 +34,7 @@ export interface CreateGSSPConfig<
   ) => GetServerSidePropsResult<P> | Promise<GetServerSidePropsResult<P>>
 }
 
-export function createGsspFactory({
+export function createGSSPFactory({
   sharedEvents = [],
 }: CreateAppGSSPConfig = {}) {
   return function createGSSP<

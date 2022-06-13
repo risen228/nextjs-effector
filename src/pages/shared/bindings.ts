@@ -1,11 +1,8 @@
-import {
-  createGipFactory,
-  createGspFactory,
-} from '@app/shared/lib/effector'
+import { createGIPFactory, createGSPFactory } from '@app/shared/lib/effector'
 import { appStarted } from './model'
 
-export const createGIP = createGipFactory({
+export const createGIP = createGIPFactory({
   sharedEvents: [appStarted],
 })
 
-export const createGSP = createGspFactory()
+export const createGSP = createGSPFactory()

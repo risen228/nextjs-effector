@@ -33,7 +33,7 @@ export interface CreateGSPConfig<
   ) => GetStaticPropsResult<P> | Promise<GetStaticPropsResult<P>>
 }
 
-export function createGspFactory({
+export function createGSPFactory({
   sharedEvents = [],
 }: CreateAppGSPConfig = {}) {
   return function createGSP<
