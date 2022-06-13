@@ -1,13 +1,21 @@
-import { createRequest } from './request'
+import { AxiosRequestConfig } from 'axios'
+import { attach, Effect } from 'effector'
+import { url } from './mocks'
+import { requestFx } from './request'
 import { Bio, User } from './types'
 
-export const getMeFx = createRequest<void, User | null>({
-  username: 'risen',
-  firstName: 'Evgeny',
-  lastName: 'Rampage',
+export const getMeFx: Effect<void, User> = attach({
+  effect: requestFx,
+  mapParams: (): AxiosRequestConfig => ({
+    method: 'get',
+    url: url('/users/me'),
+  }),
 })
 
-export const getBioFx = createRequest<void, Bio | null>({
-  birthDate: new Date().toISOString(),
-  occupation: 'No occupation, just visiting',
+export const getBioFx: Effect<void, Bio | null> = attach({
+  effect: requestFx,
+  mapParams: (): AxiosRequestConfig => ({
+    method: 'get',
+    url: url('/profiles/me'),
+  }),
 })
