@@ -23,7 +23,7 @@ export interface CreateGIPConfig<P> {
   customize?: (params: CustomizeGIPParams) => P | Promise<P>
 }
 
-export function createAppGetInitialProps({
+export function createGipFactory({
   sharedEvents = [],
   runSharedOnce = true,
 }: CreateAppGIPConfig = {}) {
@@ -36,7 +36,7 @@ export function createAppGetInitialProps({
     return enhancePageEvent(event, { runOnce: runSharedOnce })
   })
 
-  return function createGetInitialProps<P extends AnyProps = AnyProps>({
+  return function createGIP<P extends AnyProps = AnyProps>({
     pageEvent,
     customize,
   }: CreateGIPConfig<P> = {}): GetInitialProps<P> {

@@ -42,12 +42,12 @@ export const staticPageStarted = createEvent<StaticPageContext>()
 
 You can create three fabrics:
 
-- `createGetInitialProps` (recommended for the most cases)
-- `createGetServerSideProps` (usually, used only for edge-cases)
-- `createGetStaticProps` (used for static-generated pages)
+- `createGIP` (recommended for the most cases)
+- `createGSSP` (usually, used only for edge-cases)
+- `createGSP` (used for static-generated pages)
 
 ```tsx
-export const createGetInitialProps = createAppGetInitialProps({
+export const createGIP = createGipFactory({
   /*
    * Shared events will be called only on the server side
    */
@@ -61,7 +61,7 @@ export const createGetInitialProps = createAppGetInitialProps({
   runSharedOnce: false
 })
 
-export const createGetServerSideProps = createAppGetServerSideProps({
+export const createGSSP = createGsspFactory({
   /*
    * Shared events will be called on each request (including navigation)
    * In case of GSSP it's just like a shortcut
@@ -69,7 +69,7 @@ export const createGetServerSideProps = createAppGetServerSideProps({
   sharedEvents: [appStarted],
 })
 
-export const createGetStaticProps = createAppGetStaticProps({
+export const createGSP = createGspFactory({
   /*
    * Shared events will be called on each static page creation
    */
@@ -85,17 +85,17 @@ const Page: NextPage = () => {
 }
 
 // Option #1 (recommended)
-Page.getInitialProps = createGetInitialProps({
+Page.getInitialProps = createGIP({
   pageEvent: pageStarted
 })
 
 // Option #2 (very rare edge-cases)
-export const getServerSideProps = createGetServerSideProps({
+export const getServerSideProps = createGSSP({
   pageEvent: pageStarted
 })
 
 // Option #3 (static pages)
-export const getStaticProps = createGetStaticProps({
+export const getStaticProps = createGSP({
   pageEvent: staticPageStarted
 })
 
@@ -114,12 +114,12 @@ The Scope is created using the serialized values from GIP or GSSP.
 export default withEffector(App)
 ```
 
-### `createAppGetInitialProps`
+### `createGipFactory`
 
 Returns a `getInitialProps` fabric.
 
 ```tsx
-export const createGetInitialProps = createAppGetInitialProps({
+export const createGIP = createGipFactory({
   /*
    * Shared events will be called only on the server side
    */
@@ -141,7 +141,7 @@ const Page: NextPage = () => {
   return <MyProfilePage />
 }
 
-Page.getInitialProps = createGetInitialProps({
+Page.getInitialProps = createGIP({
   /*
    * Unlike "app-level" GIP, here you can speficify the only one page event
    */
@@ -164,14 +164,14 @@ Core points:
 - `sharedEvents` are executed only on the first request
 - On navigation, `pageEvent` is executed on the client-side, without any additional requests
 
-### `createAppGetServerSideProps`
+### `createGsspFactory`
 
 Returns a `getServerSideProps` fabric.
 
 Most likely, you don't need it.
 
 ```tsx
-export const createGetServerSideProps = createAppGetServerSideProps({
+export const createGSSP = createGsspFactory({
   /*
    * Shared events will be called on each request (including navigation)
    * In case of GSSP it's just like a shortcut
@@ -187,7 +187,7 @@ const Page: NextPage = () => {
   return <MyProfilePage />
 }
 
-export const getServerSideProps = createGetServerSideProps({
+export const getServerSideProps = createGSSP({
   /*
    * Unlike "app-level" GSSP, here you can speficify the only one page event
    */
@@ -211,12 +211,12 @@ Core points:
 - `sharedEvents` are executed on each request, including the navigation between pages
 - On navigation, the target page props are received using server request
 
-### `createAppGetStaticProps`
+### `createGspFactory`
 
 Returns a `getStaticProps` fabric.
 
 ```tsx
-export const createGetStaticProps = createAppGetStaticProps({
+export const createGSP = createGspFactory({
   /*
    * Shared events will be called on each static page generation
    */
@@ -231,7 +231,7 @@ const Page: NextPage = () => {
   return <MyProfilePage />
 }
 
-export const getStaticProps = createGetStaticProps({
+export const getStaticProps = createGSP({
   /*
    * Unlike "app-level" GSP, on the "page-level" you can speficify the only one page event
    */
@@ -307,9 +307,9 @@ That's why `getInitialProps` is more recommended way to bind your Effector model
 You can create GIP / GSSP fabric without `sharedEvents`, and define the flow manually:
 
 ```tsx
-const createGetInitialProps = createAppGetInitialProps()
+const createGIP = createGipFactory()
 
-Page.getInitialProps = createGetInitialProps({
+Page.getInitialProps = createGIP({
   pageEvent: pageStarted
 })
 

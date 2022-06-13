@@ -1,12 +1,12 @@
 import { NextPage } from 'next'
 import { HomePage, pageStarted } from '@app/pages/home'
-import { createGetInitialProps } from '@app/pages/shared'
+import { createGIP } from '@app/pages/shared'
 
 const Page: NextPage = () => {
   return <HomePage />
 }
 
-Page.getInitialProps = createGetInitialProps({
+Page.getInitialProps = createGIP({
   pageEvent: pageStarted,
 })
 

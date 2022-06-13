@@ -1,1 +1,1 @@
-export { createGetInitialProps } from './bindings'
+export { createGIP } from './bindings'

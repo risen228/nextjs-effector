@@ -1,6 +1,6 @@
 import { NextPage } from 'next'
 import { BlogPage, pageStarted } from '@app/pages/blog'
-import { createGetStaticProps } from '@app/pages/shared/bindings'
+import { createGSP } from '@app/pages/shared/bindings'
 import { appStarted } from '@app/pages/shared/model'
 import { usePageEvent } from '@app/shared/lib/effector'
 
@@ -11,7 +11,7 @@ const Page: NextPage = () => {
   return <BlogPage />
 }
 
-export const getStaticProps = createGetStaticProps({
+export const getStaticProps = createGSP({
   pageEvent: pageStarted,
 })
 

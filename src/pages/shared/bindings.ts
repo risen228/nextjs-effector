@@ -1,11 +1,11 @@
 import {
-  createAppGetInitialProps,
-  createAppGetStaticProps,
+  createGipFactory,
+  createGspFactory,
 } from '@app/shared/lib/effector'
 import { appStarted } from './model'
 
-export const createGetInitialProps = createAppGetInitialProps({
+export const createGIP = createGipFactory({
   sharedEvents: [appStarted],
 })
 
-export const createGetStaticProps = createAppGetStaticProps()
+export const createGSP = createGspFactory()

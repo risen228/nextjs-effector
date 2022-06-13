@@ -1,6 +1,6 @@
 import { GetStaticPaths, NextPage } from 'next'
 import { BlogPostPage, pageStarted } from '@app/pages/blog-post'
-import { createGetStaticProps } from '@app/pages/shared/bindings'
+import { createGSP } from '@app/pages/shared/bindings'
 import { appStarted } from '@app/pages/shared/model'
 import { localApi } from '@app/shared/api'
 import { usePageEvent } from '@app/shared/lib/effector'
@@ -23,7 +23,7 @@ export const getStaticPaths: GetStaticPaths<{ slug: string }> = async () => {
   }
 }
 
-export const getStaticProps = createGetStaticProps<{}, { slug: string }>({
+export const getStaticProps = createGSP<{}, { slug: string }>({
   pageEvent: pageStarted,
 })
 

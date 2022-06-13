@@ -1,3 +1,3 @@
-import { createAppGetInitialProps } from '@app/shared/lib/effector'
+import { createGipFactory } from '@app/shared/lib/effector'
 
-export const createBaseGetInitialProps = createAppGetInitialProps()
+export const createBaseGetInitialProps = createGipFactory()

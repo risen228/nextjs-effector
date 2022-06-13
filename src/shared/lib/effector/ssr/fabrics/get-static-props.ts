@@ -33,10 +33,10 @@ export interface CreateGSPConfig<
   ) => GetStaticPropsResult<P> | Promise<GetStaticPropsResult<P>>
 }
 
-export function createAppGetStaticProps({
+export function createGspFactory({
   sharedEvents = [],
 }: CreateAppGSPConfig = {}) {
-  return function createGetStaticProps<
+  return function createGSP<
     P extends AnyProps = AnyProps,
     Q extends ParsedUrlQuery = ParsedUrlQuery,
     D extends PreviewData = PreviewData

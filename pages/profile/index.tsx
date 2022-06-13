@@ -2,7 +2,7 @@ import { NextPage } from 'next'
 import NextErrorPage from 'next/error'
 import { MyProfilePage, pageStarted } from '@app/pages/my-profile'
 import { $bio } from '@app/pages/my-profile/model'
-import { createGetInitialProps } from '@app/pages/shared'
+import { createGIP } from '@app/pages/shared'
 
 interface Props {
   notFound?: boolean
@@ -16,7 +16,7 @@ const Page: NextPage<Props> = ({ notFound }) => {
   return <MyProfilePage />
 }
 
-Page.getInitialProps = createGetInitialProps<Props>({
+Page.getInitialProps = createGIP<Props>({
   pageEvent: pageStarted,
   customize({ scope, context }) {
     const { res } = context
