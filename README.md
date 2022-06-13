@@ -2,13 +2,13 @@
 
 - [Installation](#installation)
 - [Usage](#usage)
-  - [`Initial setup`](#initial-setup)
+  - [Initial setup](#initial-setup)
   - [Main Concepts](#main-concepts)
-  - [getInitialProps](#getinitialprops-server-and-client-side)
-  - [getStaticProps](#getstaticprops-only-server-side)
-  - [getServerSideProps](#getserversideprops-only-server-side)
-  - [usePageEvent](#usepageevent-only-client-side)
-  - [enhancePageEvent](#enhancepageevent-manual-flow-control)
+  - [`getInitialProps`](#getinitialprops-server-and-client-side)
+  - [`getStaticProps`](#getstaticprops-only-server-side)
+  - [`getServerSideProps`](#getserversideprops-only-server-side)
+  - [`usePageEvent`](#usepageevent-only-client-side)
+  - [`enhancePageEvent`](#enhancepageevent-manual-flow-control)
 - [Common Questions](#common-questions)
 
 ## Installation
