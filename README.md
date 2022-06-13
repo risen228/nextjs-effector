@@ -1,3 +1,16 @@
+## Navigation
+
+- [Installation](#installation)
+- [Usage](#usage)
+  - [Initial setup](#initial-setup)
+  - [Main Concepts](#main-concepts)
+  - [getInitialProps](#getinitialprops-server-and-client-side)
+  - [getStaticProps](#getstaticprops-only-server-side)
+  - [getServerSideProps](#getserversideprops-only-server-side)
+  - [usePageEvent](#usepageevent-only-client-side)
+  - [enhancePageEvent](#enhancepageevent-manual-flow-control)
+- [Common Questions](#common-questions)
+
 ## Installation
 
 Currently, this is not published in NPM (I'm working on it)
@@ -32,7 +45,7 @@ export default withEffector(App)
 
 After that, the `App` will be wrapped in Effector's Scope Provider. `withEffector` function uses the smart Scope management logic under the hood, so you can focus on the writing a business logic without thinking about problems of integrating Effector into your Next.js application.
 
-### Main concepts
+### Main Concepts
 
 Basically, there are 2 types of data in any application:
 
@@ -220,7 +233,7 @@ export const getStaticProps = createGSP({
 
 ### `getServerSideProps` (only server side)
 
-> **Warning**
+> **Warning**  
 > `getServerSideProps` is not recommended with Effector
 
 ```tsx
@@ -304,7 +317,9 @@ const enhanced = enhancePageEvent(appStarted, {
 })
 ```
 
-## Why in GSSP the shared events are called on each request?
+## Common Questions
+
+### Why in GSSP the shared events are called on each request?
 
 `getServerSideProps`, unlike the `getInitialProps`, is run only on server-side. The problem is that `pageEvent` logic may depend on global shared data. So, we need either to run shared events on each request (as we do now), or get this global shared data in some other way, for example by sending it back from the client in a serialized form (sounds risky and hard).
 
@@ -312,7 +327,7 @@ Also, to check if shared events are need to be executed, we should either to ask
 
 That's why `getInitialProps` is more recommended way to bind your Effector models to Page lifecycle. When navigating between pages, it runs on client side, so we can easily omit the app event execution.
 
-## I need to run sharedEvents and pageEvent in parallel. How can I do that?
+### I need to run sharedEvents and pageEvent in parallel. How can I do that?
 
 You can create GIP / GSSP fabric without `sharedEvents`, and define the flow manually:
 
