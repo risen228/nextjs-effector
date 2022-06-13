@@ -6,7 +6,7 @@ import { localApi } from '@app/shared/api'
 import { usePageEvent } from '@app/shared/lib/effector'
 
 const Page: NextPage = () => {
-  console.info('BlogPostPage: render')
+  console.info('[Render] BlogPostPage')
 
   usePageEvent(appStarted, { runOnce: true })
   return <BlogPostPage />

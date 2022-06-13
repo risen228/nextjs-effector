@@ -3,7 +3,7 @@ import { loadAuthenticatedUser } from '@app/entities/authenticated-user'
 
 export const appStarted = createEvent()
 
-appStarted.watch(() => console.info('[Events] appStarted'))
+appStarted.watch(() => console.info('[Event] appStarted'))
 
 sample({
   clock: appStarted,

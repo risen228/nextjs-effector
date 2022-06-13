@@ -5,7 +5,7 @@ import { appStarted } from '@app/pages/shared/model'
 import { usePageEvent } from '@app/shared/lib/effector'
 
 const Page: NextPage = () => {
-  console.info('BlogPage: render')
+  console.info('[Render] BlogPage')
 
   usePageEvent(appStarted, { runOnce: true })
   return <BlogPage />
