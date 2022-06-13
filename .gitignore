@@ -33,6 +33,3 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
-
-# msw
-public/mockServiceWorker.js
