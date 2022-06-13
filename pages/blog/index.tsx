@@ -1,18 +1,14 @@
 import { NextPage } from 'next'
-import { AboutPage, pageStarted } from '@app/pages/about'
+import { BlogPage, pageStarted } from '@app/pages/blog'
 import { createGetStaticProps } from '@app/pages/shared/bindings'
 import { appStarted } from '@app/pages/shared/model'
 import { usePageEvent } from '@app/shared/lib/effector'
 
-interface Props {
-  content: string
-}
-
-const Page: NextPage<Props> = () => {
-  console.info('AboutPage: render')
+const Page: NextPage = () => {
+  console.info('BlogPage: render')
 
   usePageEvent(appStarted, { runOnce: true })
-  return <AboutPage />
+  return <BlogPage />
 }
 
 export const getStaticProps = createGetStaticProps({

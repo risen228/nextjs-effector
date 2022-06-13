@@ -17,6 +17,11 @@ module.exports = configure({
       '@typescript-eslint/no-explicit-any': 'off',
       'react/destructuring-assignment': 'off',
       'react/jsx-props-no-spreading': 'off',
+      '@typescript-eslint/no-non-null-assertion': 'off',
+      '@typescript-eslint/ban-types': [
+        'error',
+        { extendDefaults: true, types: { '{}': false } },
+      ],
     },
   },
 })

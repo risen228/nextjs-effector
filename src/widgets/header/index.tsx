@@ -20,8 +20,8 @@ const routes: Route[] = [
     path: paths.me(),
   },
   {
-    title: 'About',
-    path: paths.about(),
+    title: 'Blog',
+    path: paths.blog(),
   },
 ]
 
