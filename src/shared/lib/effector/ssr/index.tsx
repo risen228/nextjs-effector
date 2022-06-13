@@ -9,5 +9,7 @@ export type {
   PageEvent,
   StaticPageContext,
   StaticPageEvent,
+  EmptyOrPageEvent,
+  EmptyOrStaticPageEvent
 } from './types'
 export { withEffector } from './with-effector'
