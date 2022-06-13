@@ -2,7 +2,7 @@
 
 - [Installation](#installation)
 - [Usage](#usage)
-  - [Initial setup](#initial-setup)
+  - [`Initial setup`](#initial-setup)
   - [Main Concepts](#main-concepts)
   - [getInitialProps](#getinitialprops-server-and-client-side)
   - [getStaticProps](#getstaticprops-only-server-side)
