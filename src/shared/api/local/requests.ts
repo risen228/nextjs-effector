@@ -36,7 +36,7 @@ const posts: Post[] = [
     categoryIds: [1, 2],
   },
   {
-    id: 1,
+    id: 2,
     slug: 'there-are-only-three-genders',
     title: 'There are only three genders',
     content: 'Male, female, and Apache Helicopter',
