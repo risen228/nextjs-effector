@@ -13,7 +13,9 @@
 
 ## Installation
 
-Currently, this is not published in NPM (I'm working on it)
+```sh
+yarn add nextjs-effector
+```
 
 ## Usage
 
