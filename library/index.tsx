@@ -5,11 +5,11 @@ export {
   createGSSPFactory,
 } from './fabrics'
 export type {
+  EmptyOrPageEvent,
+  EmptyOrStaticPageEvent,
   PageContext,
   PageEvent,
   StaticPageContext,
   StaticPageEvent,
-  EmptyOrPageEvent,
-  EmptyOrStaticPageEvent
 } from './types'
 export { withEffector } from './with-effector'
