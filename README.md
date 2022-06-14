@@ -38,7 +38,7 @@ Next, enhance your `App`:
 /* pages/_app.tsx */
 
 import App from 'next/app'
-import { withEffector } from '@app/shared/lib/effector'
+import { withEffector } from 'nextjs-effector'
 
 export default withEffector(App)
 ```

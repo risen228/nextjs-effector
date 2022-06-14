@@ -14,10 +14,11 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
-    "baseUrl": "./src",
+    "baseUrl": "./",
     "paths": {
-      "@app": ["./"],
-      "@app/*": ["./*"]
+      "@app": ["./src"],
+      "@app/*": ["./src/*"],
+      "nextjs-effector": ["./library"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],

@@ -1,3 +1,3 @@
-import { createGIPFactory } from '@app/shared/lib/effector'
+import { createGIPFactory } from 'nextjs-effector'
 
 export const createBaseGetInitialProps = createGIPFactory()

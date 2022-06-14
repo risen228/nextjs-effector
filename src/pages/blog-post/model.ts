@@ -1,6 +1,6 @@
 import { attach, createEvent, restore, sample } from 'effector'
+import { StaticPageContext } from 'nextjs-effector'
 import { localApi } from '@app/shared/api'
-import { StaticPageContext } from '@app/shared/lib/effector'
 
 export const pageStarted = createEvent<StaticPageContext<{ slug: string }>>()
 
