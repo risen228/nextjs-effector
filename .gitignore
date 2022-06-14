@@ -5,6 +5,10 @@
 /.pnp
 .pnp.js
 
+# build
+.rollup.cache
+dist
+
 # testing
 /coverage
 
