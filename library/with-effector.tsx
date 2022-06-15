@@ -1,5 +1,4 @@
-import { fork, serialize } from 'effector'
-import { Provider } from 'effector-react/scope'
+import { fork, Scope, serialize } from 'effector'
 import { NextComponentType } from 'next'
 import { AppContext, AppProps } from 'next/app'
 import React, { useRef } from 'react'
@@ -46,7 +45,14 @@ export function useScope(values: Values = {}) {
   return state.clientScope
 }
 
-export function withEffector(App: NextComponentType<AppContext, any, any>) {
+interface Options {
+  Provider: React.Provider<Scope>
+}
+
+export function withEffector(
+  App: NextComponentType<AppContext, any, any>,
+  { Provider }: Options
+) {
   return function EnhancedApp(props: AppProps) {
     const { [INITIAL_STATE_KEY]: initialState, ...pageProps } = props.pageProps
 

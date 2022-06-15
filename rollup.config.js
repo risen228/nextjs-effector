@@ -10,7 +10,7 @@ import { terser } from 'rollup-plugin-terser'
 import pkg from './package.json'
 
 const TYPECHECK = true
-const MINIFY = false
+const MINIFY = true
 
 const src = (file) => `library/${file}`
 const dist = (file) => `dist/${file}`
