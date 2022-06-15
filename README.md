@@ -45,9 +45,11 @@ Next, enhance your `App`:
 /* pages/_app.tsx */
 
 import App from 'next/app'
+import { Provider } from 'effector-react/scope'
 import { withEffector } from 'nextjs-effector'
 
-export default withEffector(App)
+// Passing Provider is required to correctly accessing Scope
+export default withEffector(App, { Provider })
 ```
 
 After that, the `App` will be wrapped in Effector's Scope Provider. `withEffector` function uses the smart Scope management logic under the hood, so you can focus on the writing a business logic without thinking about problems of integrating Effector into your Next.js application.
