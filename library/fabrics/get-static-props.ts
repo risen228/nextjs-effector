@@ -1,4 +1,5 @@
 import { Scope } from 'effector'
+import { ContextNormalizers } from 'library/context-normalizers'
 import {
   GetStaticProps,
   GetStaticPropsContext,
@@ -51,11 +52,13 @@ export function createGSPFactory({
        */
       const events = [...sharedEvents, pageEvent].filter(isStaticPageEvent)
 
+      const normalizedContext = ContextNormalizers.getStaticProps(context)
+
       /*
        * Execute app and page Effector events,
        * and wait for model to settle
        */
-      const { scope, props } = await startModel(events, context)
+      const { scope, props } = await startModel(events, normalizedContext)
 
       /*
        * Get user's GSP result

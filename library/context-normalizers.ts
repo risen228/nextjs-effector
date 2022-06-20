@@ -1,7 +1,11 @@
-import { GetServerSidePropsContext, NextPageContext } from 'next'
+import {
+  GetServerSidePropsContext,
+  GetStaticPropsContext,
+  NextPageContext,
+} from 'next'
 import { NextRouter } from 'next/router'
 import { ParsedUrlQuery } from 'querystring'
-import { PageContext } from './types'
+import { PageContext, StaticPageContext } from './types'
 
 function normalizeQuery(query: ParsedUrlQuery, route: string) {
   const onlyQuery: ParsedUrlQuery = {}
@@ -47,18 +51,37 @@ function buildPathname({ req, resolvedUrl }: GetServerSidePropsContext) {
 
 export const ContextNormalizers = {
   router: (router: NextRouter): PageContext => ({
-    ...router,
+    pathname: router.pathname,
+    asPath: router.asPath,
+    defaultLocale: router.defaultLocale,
+    locale: router.locale,
+    locales: router.locales,
+    route: router.route,
     ...normalizeQuery(router.query, router.route),
   }),
   getInitialProps: (context: NextPageContext): PageContext => ({
-    ...context,
+    pathname: context.pathname,
+    asPath: context.asPath,
+    defaultLocale: context.defaultLocale,
+    locale: context.locale,
+    locales: context.locales,
     route: context.pathname,
     ...normalizeQuery(context.query, context.pathname),
   }),
   getServerSideProps: (context: GetServerSidePropsContext): PageContext => ({
-    ...context,
+    defaultLocale: context.defaultLocale,
+    locale: context.locale,
+    locales: context.locales,
     params: context.params ?? {},
     query: removeParamsFromQuery(context.query, context.params ?? {}),
     pathname: buildPathname(context),
+  }),
+  getStaticProps: (context: GetStaticPropsContext): StaticPageContext => ({
+    defaultLocale: context.defaultLocale,
+    locale: context.locale,
+    locales: context.locales,
+    params: context.params,
+    preview: context.preview,
+    previewData: context.previewData,
   }),
 }
