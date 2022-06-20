@@ -23,7 +23,10 @@ export const getStaticPaths: GetStaticPaths<{ slug: string }> = async () => {
   }
 }
 
-export const getStaticProps = createGSP<{}, { slug: string }>({
+export const getStaticProps = createGSP<
+  Record<string, never>,
+  { slug: string }
+>({
   pageEvent: pageStarted,
 })
 
