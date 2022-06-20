@@ -1,5 +1,4 @@
 import { Scope } from 'effector'
-import { ContextNormalizers } from 'library/context-normalizers'
 import {
   GetStaticProps,
   GetStaticPropsContext,
@@ -7,6 +6,7 @@ import {
   PreviewData,
 } from 'next'
 import { ParsedUrlQuery } from 'querystring'
+import { ContextNormalizers } from '../context-normalizers'
 import { isStaticPageEvent } from '../shared'
 import { startModel } from '../start-model'
 import { AnyProps, EmptyOrStaticPageEvent } from '../types'

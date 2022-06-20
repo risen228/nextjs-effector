@@ -37,7 +37,7 @@
     "effector-react": "^22.0.6",
     "esbuild": "^0.14.43",
     "eslint": "^8.16.0",
-    "eslint-kit": "^5.2.2",
+    "eslint-kit": "^5.4.0",
     "jest": "^28.1.1",
     "jest-serializer-path": "^0.1.15",
     "nanoid": "^3.0.0",
