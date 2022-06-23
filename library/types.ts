@@ -23,7 +23,11 @@ export interface PageContextClientEnv {
 
 export interface PageContextServerEnv {
   env: 'server'
-  req: IncomingMessage
+  req: IncomingMessage & {
+    cookies: {
+      [key: string]: string
+    }
+  }
   res: ServerResponse
 }
 
