@@ -123,6 +123,43 @@ export const pageStarted = createEvent<PageContext>()
 export const pageStarted = createEvent<PageContext<Props, Params, Query>>()
 
 /*
+ * PageContext has the "env" field with "client" or "server" value,
+ * so you can determine the environment where the code is executed
+ * 
+ * The library provides useful types and type-guards for these purposes
+ */
+import {
+  isClientPageContext,
+  isServerPageContext,
+  ClientPageContext,
+  ServerPageContext
+} from 'nextjs-effector'
+
+const pageStartedOnClient = createEvent<ClientPageContext>()
+const pageStartedOnServer = createEvent<ServerPageContext>()
+
+sample({
+  source: pageStarted,
+  filter: isClientPageContext,
+  target: pageStartedOnClient
+})
+
+sample({
+  source: pageStarted,
+  filter: isServerPageContext,
+  target: pageStartedOnServer
+})
+
+sample({
+  source: pageStartedOnServer,
+  fn: (context) => {
+    // You can access "req" and "res" on server side
+    const { req, res } = context
+    return req.cookie
+  }
+})
+
+/*
  * GSP accepts the events with "StaticPageContext | void" payload
  * Unlike PageContext, the StaticPageContext doesn't include query
  * and some other properties

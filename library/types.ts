@@ -1,8 +1,9 @@
+import { IncomingMessage, ServerResponse } from 'http'
 import { Event } from 'effector'
 import { GetStaticPropsContext, NextPageContext, PreviewData } from 'next'
 import { ParsedUrlQuery } from 'querystring'
 
-export interface PageContext<
+export interface PageContextBase<
   Q extends ParsedUrlQuery = ParsedUrlQuery,
   P extends ParsedUrlQuery = ParsedUrlQuery
 > {
@@ -15,6 +16,31 @@ export interface PageContext<
   locales?: string[]
   defaultLocale?: string
 }
+
+export interface PageContextClientEnv {
+  env: 'client'
+}
+
+export interface PageContextServerEnv {
+  env: 'server'
+  req: IncomingMessage
+  res: ServerResponse
+}
+
+export type ClientPageContext<
+  Q extends ParsedUrlQuery = ParsedUrlQuery,
+  P extends ParsedUrlQuery = ParsedUrlQuery
+> = PageContextBase<Q, P> & PageContextClientEnv
+
+export type ServerPageContext<
+  Q extends ParsedUrlQuery = ParsedUrlQuery,
+  P extends ParsedUrlQuery = ParsedUrlQuery
+> = PageContextBase<Q, P> & PageContextServerEnv
+
+export type PageContext<
+  Q extends ParsedUrlQuery = ParsedUrlQuery,
+  P extends ParsedUrlQuery = ParsedUrlQuery
+> = ClientPageContext<Q, P> | ServerPageContext<Q, P>
 
 export type PageEvent<
   Q extends ParsedUrlQuery = ParsedUrlQuery,

@@ -1,3 +1,4 @@
+export { isClientPageContext, isServerPageContext } from './context-env'
 export { enhancePageEvent, usePageEvent } from './enhanced-events'
 export {
   createGIPFactory,
