@@ -5,7 +5,8 @@ import {
 } from 'next'
 import { NextRouter } from 'next/router'
 import { ParsedUrlQuery } from 'querystring'
-import { PageContext, StaticPageContext } from './types'
+import { env } from './env'
+import { PageContext, PageContextBase, StaticPageContext } from './types'
 
 function normalizeQuery(query: ParsedUrlQuery, route: string) {
   const onlyQuery: ParsedUrlQuery = {}
@@ -51,6 +52,7 @@ function buildPathname({ req, resolvedUrl }: GetServerSidePropsContext) {
 
 export const ContextNormalizers = {
   router: (router: NextRouter): PageContext => ({
+    env: 'client',
     pathname: router.pathname,
     asPath: router.asPath,
     defaultLocale: router.defaultLocale,
@@ -59,23 +61,61 @@ export const ContextNormalizers = {
     route: router.route,
     ...normalizeQuery(router.query, router.route),
   }),
-  getInitialProps: (context: NextPageContext): PageContext => ({
-    pathname: context.pathname,
-    asPath: context.asPath,
-    defaultLocale: context.defaultLocale,
-    locale: context.locale,
-    locales: context.locales,
-    route: context.pathname,
-    ...normalizeQuery(context.query, context.pathname),
-  }),
-  getServerSideProps: (context: GetServerSidePropsContext): PageContext => ({
-    defaultLocale: context.defaultLocale,
-    locale: context.locale,
-    locales: context.locales,
-    params: context.params ?? {},
-    query: removeParamsFromQuery(context.query, context.params ?? {}),
-    pathname: buildPathname(context),
-  }),
+  getInitialProps: (context: NextPageContext): PageContext => {
+    const base: PageContextBase = {
+      pathname: context.pathname,
+      asPath: context.asPath,
+      defaultLocale: context.defaultLocale,
+      locale: context.locale,
+      locales: context.locales,
+      route: context.pathname,
+      ...normalizeQuery(context.query, context.pathname),
+    }
+
+    if (env.isClient) {
+      return { ...base, env: 'client' }
+    }
+
+    return Object.defineProperties(base, {
+      env: {
+        value: 'server',
+        enumerable: true,
+      },
+      req: {
+        value: context.req,
+        enumerable: false,
+      },
+      res: {
+        value: context.res,
+        enumerable: false,
+      },
+    }) as PageContext
+  },
+  getServerSideProps: (context: GetServerSidePropsContext): PageContext => {
+    const base: PageContextBase = {
+      defaultLocale: context.defaultLocale,
+      locale: context.locale,
+      locales: context.locales,
+      params: context.params ?? {},
+      query: removeParamsFromQuery(context.query, context.params ?? {}),
+      pathname: buildPathname(context),
+    }
+
+    return Object.defineProperties(base, {
+      env: {
+        value: 'server',
+        enumerable: true,
+      },
+      req: {
+        value: context.req,
+        enumerable: false,
+      },
+      res: {
+        value: context.res,
+        enumerable: false,
+      },
+    }) as PageContext
+  },
   getStaticProps: (context: GetStaticPropsContext): StaticPageContext => ({
     defaultLocale: context.defaultLocale,
     locale: context.locale,
