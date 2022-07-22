@@ -1,12 +1,12 @@
 export { isClientPageContext, isServerPageContext } from './context-env'
 export { enhancePageEvent, usePageEvent } from './enhanced-events'
 export type {
-  CreateAppGIPConfig,
-  CreateAppGSPConfig,
-  CreateAppGSSPConfig,
-  CreateGIPConfig,
-  CreateGSPConfig,
-  CreateGSSPConfig,
+  CustomizeGIP,
+  CustomizeGIPParams,
+  CustomizeGSP,
+  CustomizeGSPParams,
+  CustomizeGSSP,
+  CustomizeGSSPParams,
 } from './fabrics'
 export {
   createGIPFactory,
