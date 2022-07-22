@@ -18,7 +18,9 @@ export interface CustomizeGIPParams {
   context: NextPageContext
 }
 
-export type CustomizeGIP<P> = (params: CustomizeGIPParams) => P | Promise<P>
+export type CustomizeGIP<P extends AnyProps = AnyProps> = (
+  params: CustomizeGIPParams
+) => P | Promise<P>
 
 export interface CreateGIPConfig<P> {
   pageEvent?: EmptyOrPageEvent<any, any>

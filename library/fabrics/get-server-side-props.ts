@@ -24,7 +24,7 @@ export interface CustomizeGSSPParams<
 }
 
 export type CustomizeGSSP<
-  P extends AnyProps,
+  P extends AnyProps = AnyProps,
   Q extends ParsedUrlQuery = ParsedUrlQuery,
   D extends PreviewData = PreviewData
 > = (

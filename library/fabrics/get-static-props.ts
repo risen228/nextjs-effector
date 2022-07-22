@@ -24,9 +24,9 @@ export interface CustomizeGSPParams<
 }
 
 export type CustomizeGSP<
-  P extends AnyProps,
-  Q extends ParsedUrlQuery,
-  D extends PreviewData
+  P extends AnyProps = AnyProps,
+  Q extends ParsedUrlQuery = ParsedUrlQuery,
+  D extends PreviewData = PreviewData
 > = (
   params: CustomizeGSPParams<Q, D>
 ) => GetStaticPropsResult<P> | Promise<GetStaticPropsResult<P>>
