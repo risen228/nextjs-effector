@@ -15,7 +15,7 @@ export interface CreateAppGSPConfig {
   sharedEvents?: EmptyOrStaticPageEvent<any, any>[]
 }
 
-interface CustomizeGSPParams<
+export interface CustomizeGSPParams<
   Q extends ParsedUrlQuery = ParsedUrlQuery,
   D extends PreviewData = PreviewData
 > {
@@ -23,15 +23,21 @@ interface CustomizeGSPParams<
   context: GetStaticPropsContext<Q, D>
 }
 
+export type CustomizeGSP<
+  P extends AnyProps,
+  Q extends ParsedUrlQuery,
+  D extends PreviewData
+> = (
+  params: CustomizeGSPParams<Q, D>
+) => GetStaticPropsResult<P> | Promise<GetStaticPropsResult<P>>
+
 export interface CreateGSPConfig<
   P extends AnyProps,
   Q extends ParsedUrlQuery,
   D extends PreviewData
 > {
   pageEvent?: EmptyOrStaticPageEvent<Q, D>
-  customize?: (
-    params: CustomizeGSPParams
-  ) => GetStaticPropsResult<P> | Promise<GetStaticPropsResult<P>>
+  customize?: CustomizeGSP<P, Q, D>
 }
 
 export function createGSPFactory({
