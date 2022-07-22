@@ -13,14 +13,16 @@ export interface CreateAppGIPConfig {
   runSharedOnce?: boolean
 }
 
-interface CustomizeGIPParams {
+export interface CustomizeGIPParams {
   scope: Scope
   context: NextPageContext
 }
 
+export type CustomizeGIP<P> = (params: CustomizeGIPParams) => P | Promise<P>
+
 export interface CreateGIPConfig<P> {
   pageEvent?: EmptyOrPageEvent<any, any>
-  customize?: (params: CustomizeGIPParams) => P | Promise<P>
+  customize?: CustomizeGIP<P>
 }
 
 export function createGIPFactory({
