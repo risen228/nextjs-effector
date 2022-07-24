@@ -39,6 +39,13 @@ Due to some Next.js bundling issues, it's currently recommended to install `next
    }
    ```
 
+### Unix script for downloading the latest release into the specified folder
+
+```sh
+export NEXTJS_EFFECTOR_FOLDER=src/nextjs-effector
+source <(wget -qO- https://raw.githubusercontent.com/risenforces/nextjs-effector/release/latest/install.sh)
+```
+
 ### Package Manager
 
 ```sh
