@@ -22,6 +22,25 @@
 
 ## Installation
 
+Due to some Next.js bundling issues, it's currently recommended to install `nextjs-effector` locally:
+
+1. Copy `library` folder contents into your project, for example in `src/nextjs-effector`
+2. Create alias through tsconfig.json:
+
+   ```json
+   {
+     "compilerOptions": {
+       "baseUrl": "./",
+       "paths": {
+         "nextjs-effector": ["./src/nextjs-effector"],
+         "nextjs-effector/*": ["./src/nextjs-effector/*"]
+       }
+     }
+   }
+   ```
+
+### Package Manager
+
 ```sh
 yarn add nextjs-effector
 ```
