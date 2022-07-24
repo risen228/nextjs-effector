@@ -1,16 +1,17 @@
-import { Scope } from 'effector'
+import { allSettled, fork, Scope, serialize } from 'effector'
 import { NextPageContext } from 'next'
+import { INITIAL_STATE_KEY } from '../constants'
 import { ContextNormalizers } from '../context-normalizers'
 import { enhancePageEvent } from '../enhanced-events'
 import { env } from '../env'
 import { assertStrict, isPageEvent } from '../shared'
-import { startModel } from '../start-model'
 import { state } from '../state'
 import { AnyProps, EmptyOrPageEvent, GetInitialProps } from '../types'
 
 export interface CreateAppGIPConfig {
   sharedEvents?: EmptyOrPageEvent[]
   runSharedOnce?: boolean
+  createServerScope?: (context: NextPageContext) => Scope
 }
 
 export interface CustomizeGIPParams {
@@ -30,6 +31,7 @@ export interface CreateGIPConfig<P> {
 export function createGIPFactory({
   sharedEvents = [],
   runSharedOnce = true,
+  createServerScope = () => fork(),
 }: CreateAppGIPConfig = {}) {
   /*
    * When "runSharedOnce" is equals to "true",
@@ -57,15 +59,11 @@ export function createGIPFactory({
 
       const normalizedContext = ContextNormalizers.getInitialProps(context)
 
-      /*
-       * Execute resulting Effector events,
-       * and wait for model to settle
-       */
-      const { scope, props } = await startModel(
-        events,
-        normalizedContext,
-        state.clientScope // Use already existing Scope on the client side
-      )
+      const scope = state.clientScope ?? createServerScope(context)
+
+      for (const event of events) {
+        await allSettled(event, { scope, params: normalizedContext })
+      }
 
       /*
        * On client-side, save the newly created Scope inside scopeMap
@@ -84,7 +82,14 @@ export function createGIPFactory({
         ? await customize({ scope, context })
         : ({} as P)
 
-      return Object.assign(userProps, props)
+      /*
+       * Serialize after customize to include user operations
+       */
+      const effectorProps = {
+        [INITIAL_STATE_KEY]: serialize(scope),
+      }
+
+      return Object.assign(userProps, effectorProps)
     }
   }
 }

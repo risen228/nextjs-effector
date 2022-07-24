@@ -9,6 +9,8 @@ interface Props {
 }
 
 const Page: NextPage<Props> = ({ notFound }) => {
+  console.info('[Render] ProfilePage')
+
   if (notFound) {
     return <NextErrorPage statusCode={404} />
   }

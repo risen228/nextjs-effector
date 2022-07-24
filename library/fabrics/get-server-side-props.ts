@@ -1,4 +1,4 @@
-import { Scope } from 'effector'
+import { allSettled, fork, Scope, serialize } from 'effector'
 import {
   GetServerSideProps,
   GetServerSidePropsContext,
@@ -6,13 +6,14 @@ import {
   PreviewData,
 } from 'next'
 import { ParsedUrlQuery } from 'querystring'
+import { INITIAL_STATE_KEY } from '../constants'
 import { ContextNormalizers } from '../context-normalizers'
 import { isPageEvent } from '../shared'
-import { startModel } from '../start-model'
 import { AnyProps, EmptyOrPageEvent } from '../types'
 
 export interface CreateAppGSSPConfig {
   sharedEvents?: EmptyOrPageEvent<any, any>[]
+  createServerScope?: (context: GetServerSidePropsContext) => Scope
 }
 
 export interface CustomizeGSSPParams<
@@ -42,6 +43,7 @@ export interface CreateGSSPConfig<
 
 export function createGSSPFactory({
   sharedEvents = [],
+  createServerScope = () => fork(),
 }: CreateAppGSSPConfig = {}) {
   return function createGSSP<
     P extends AnyProps = AnyProps,
@@ -59,11 +61,11 @@ export function createGSSPFactory({
 
       const normalizedContext = ContextNormalizers.getServerSideProps(context)
 
-      /*
-       * Execute app and page Effector events,
-       * and wait for model to settle
-       */
-      const { scope, props } = await startModel(events, normalizedContext)
+      const scope = createServerScope(context)
+
+      for (const event of events) {
+        await allSettled(event, { scope, params: normalizedContext })
+      }
 
       /*
        * Get user's GSSP result
@@ -83,10 +85,17 @@ export function createGSSPFactory({
       }
 
       /*
+       * Serialize after customize to include user operations
+       */
+      const effectorProps = {
+        [INITIAL_STATE_KEY]: serialize(scope),
+      }
+
+      /*
        * Mix serialized Effector Scope values into the user props
        */
       gsspResult.props = await gsspResult.props
-      Object.assign(gsspResult.props, props)
+      Object.assign(gsspResult.props, effectorProps)
 
       return gsspResult
     }
