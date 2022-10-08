@@ -44,7 +44,7 @@ export function useScope(values: Values = {}) {
 }
 
 export function withEffector(App: NextComponentType<AppContext, any, any>) {
-  return function EnhancedApp(props: AppProps) {
+  return function EnhancedApp(props: AppProps<any>) {
     const { [INITIAL_STATE_KEY]: initialState, ...pageProps } = props.pageProps
 
     const scope = useScope(initialState)
