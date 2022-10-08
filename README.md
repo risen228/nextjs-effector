@@ -1,5 +1,6 @@
 ## Navigation
 
+- [Requirements](#requirements)
 - [Installation](#installation)
 - [Usage](#usage)
   - [Initial setup](#initial-setup)
@@ -20,33 +21,13 @@
   - [Prerelease from](#prerelease-flow)
   - [Conventions](#conventions)
 
+## Requirements
+
+- `next` >= `12.0.0`
+- `effector` >= `22.2.0` (effector Halley with many syntax changes)
+- `effector-react` >= `22.3.3` (has important bugfix for Next.js)
+
 ## Installation
-
-Due to some Next.js bundling issues, it's currently recommended to install `nextjs-effector` locally:
-
-1. Copy `library` folder contents into your project, for example in `src/nextjs-effector`
-2. Create alias through tsconfig.json:
-
-   ```json
-   {
-     "compilerOptions": {
-       "baseUrl": "./",
-       "paths": {
-         "nextjs-effector": ["./src/nextjs-effector"],
-         "nextjs-effector/*": ["./src/nextjs-effector/*"]
-       }
-     }
-   }
-   ```
-
-### Unix script for downloading the latest release into the specified folder
-
-```sh
-export NEXTJS_EFFECTOR_FOLDER=src/nextjs-effector
-source <(wget -qO- https://raw.githubusercontent.com/risenforces/nextjs-effector/release/latest/install.sh)
-```
-
-### Package Manager
 
 ```sh
 yarn add nextjs-effector
@@ -69,17 +50,47 @@ By doing that, all our Effector units will be created with unique `sid` constant
 
 The `reactSsr` option is used to replace all `effector-react` imports with `effector-react/scope` version to ensure that `useStore`, `useEvent`, and the other hooks use the scope that was passed using `Provider`.
 
-Next, enhance your `App`:
+Next, you need to create `effector` aliases to `.cjs` in your `next.config.js`:
+
+```javascript
+const path = require('path')
+
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  reactStrictMode: true,
+  webpack: (config) => {
+    /*
+     * Prevent using effector .mjs extension in "web" version of bundle
+     * Otherwise, we can face different bugs when using effector
+     */
+
+    config.resolve.alias.effector = path.resolve(
+      './node_modules/effector/effector.cjs.js'
+    )
+
+    config.resolve.alias['effector-react/scope'] = path.resolve(
+      './node_modules/effector-react/scope.js'
+    )
+
+    return config
+  },
+}
+
+module.exports = nextConfig
+```
+
+Also, check your `effector` and `effector-react` versions: they should match the requirements.
+
+Finally, enhance your `App`:
 
 ```tsx
 /* pages/_app.tsx */
 
 import App from 'next/app'
-import * as effectorReact from 'effector-react/scope'
 import { withEffector } from 'nextjs-effector'
 
 // Passing effector-react exports is required to access the Scope
-export default withEffector(App, { effectorReact })
+export default withEffector(App)
 ```
 
 After that, the `App` will be wrapped in Effector's Scope Provider. `withEffector` function uses the smart Scope management logic under the hood, so you can focus on the writing a business logic without thinking about problems of integrating Effector into your Next.js application.

@@ -1,8 +1,8 @@
 import { createEvent, createStore, Event, sample } from 'effector'
+import { useEvent } from 'effector-react/scope'
 import { useRouter } from 'next/router'
 import { useEffect } from 'react'
 import { ContextNormalizers } from './context-normalizers'
-import { EffectorReact } from './effector-react'
 import { assertStrict } from './shared'
 import { EmptyOrPageEvent, PageContext, StaticPageContext } from './types'
 
@@ -54,7 +54,7 @@ export function usePageEvent(
 
   // the function has a cache inside, so we can safely call it on every render
   const enhancedEvent = enhancePageEvent(event, options)
-  const boundEvent = EffectorReact.useEvent(enhancedEvent)
+  const boundEvent = useEvent(enhancedEvent)
 
   useEffect(() => {
     const context = ContextNormalizers.router(router)
