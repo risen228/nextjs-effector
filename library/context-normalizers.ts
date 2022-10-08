@@ -50,19 +50,28 @@ function buildPathname({ req, resolvedUrl }: GetServerSidePropsContext) {
   return `${protocol}://` + domain + resolvedUrl
 }
 
+function withoutExplicitUndefined<T extends Record<string, any>>(object: T): T {
+  const entries = Object.entries(object).filter(
+    ([, value]) => value !== undefined
+  )
+
+  return Object.fromEntries(entries) as T
+}
+
 export const ContextNormalizers = {
-  router: (router: NextRouter): PageContext => ({
-    env: 'client',
-    pathname: router.pathname,
-    asPath: router.asPath,
-    defaultLocale: router.defaultLocale,
-    locale: router.locale,
-    locales: router.locales,
-    route: router.route,
-    ...normalizeQuery(router.query, router.route),
-  }),
+  router: (router: NextRouter): PageContext =>
+    withoutExplicitUndefined({
+      env: 'client',
+      pathname: router.pathname,
+      asPath: router.asPath,
+      defaultLocale: router.defaultLocale,
+      locale: router.locale,
+      locales: router.locales,
+      route: router.route,
+      ...normalizeQuery(router.query, router.route),
+    }),
   getInitialProps: (context: NextPageContext): PageContext => {
-    const base: PageContextBase = {
+    const base: PageContextBase = withoutExplicitUndefined({
       pathname: context.pathname,
       asPath: context.asPath,
       defaultLocale: context.defaultLocale,
@@ -70,7 +79,7 @@ export const ContextNormalizers = {
       locales: context.locales,
       route: context.pathname,
       ...normalizeQuery(context.query, context.pathname),
-    }
+    })
 
     if (env.isClient) {
       return { ...base, env: 'client' }
@@ -92,14 +101,14 @@ export const ContextNormalizers = {
     }) as PageContext
   },
   getServerSideProps: (context: GetServerSidePropsContext): PageContext => {
-    const base: PageContextBase = {
+    const base: PageContextBase = withoutExplicitUndefined({
       defaultLocale: context.defaultLocale,
       locale: context.locale,
       locales: context.locales,
       params: context.params ?? {},
       query: removeParamsFromQuery(context.query, context.params ?? {}),
       pathname: buildPathname(context),
-    }
+    })
 
     return Object.defineProperties(base, {
       env: {
@@ -116,12 +125,13 @@ export const ContextNormalizers = {
       },
     }) as PageContext
   },
-  getStaticProps: (context: GetStaticPropsContext): StaticPageContext => ({
-    defaultLocale: context.defaultLocale,
-    locale: context.locale,
-    locales: context.locales,
-    params: context.params,
-    preview: context.preview,
-    previewData: context.previewData,
-  }),
+  getStaticProps: (context: GetStaticPropsContext): StaticPageContext =>
+    withoutExplicitUndefined({
+      defaultLocale: context.defaultLocale,
+      locale: context.locale,
+      locales: context.locales,
+      params: context.params,
+      preview: context.preview,
+      previewData: context.previewData,
+    }),
 }
