@@ -1,6 +1,7 @@
 /* eslint-disable import/no-default-export */
 /* eslint-disable no-unused-vars */
 
+import { getBabelInputPlugin } from '@rollup/plugin-babel'
 import typescript from '@rollup/plugin-typescript'
 import { defineConfig } from 'rollup'
 import bundleSize from 'rollup-plugin-bundle-size'
@@ -26,7 +27,7 @@ const bundle = (input, { plugins = [], ...config }) =>
   })
 
 const config = defineConfig([
-  /* Compiled JS (CommonJS, ESM) */
+  /* Compiled JS (CommonJS) */
   bundle(src('index.ts'), {
     plugins: [
       TYPECHECK && typescript({ outputToFilesystem: false }),
@@ -38,6 +39,35 @@ const config = defineConfig([
         file: pkg.main,
         format: 'cjs',
       },
+    ],
+  }),
+
+  /* Compiled JS (ESM) */
+  bundle(src('index.ts'), {
+    plugins: [
+      TYPECHECK && typescript({ outputToFilesystem: false }),
+      getBabelInputPlugin({
+        babelrc: false,
+        extensions: ['.js', '.jsx', '.ts', '.tsx'],
+        presets: ['@babel/preset-typescript', '@babel/preset-react'],
+        plugins: [
+          [
+            'module-resolver',
+            {
+              alias: {
+                'effector$': 'effector/effector.mjs',
+                'effector-react$': 'effector-react/effector-react.mjs',
+                'next/router$': 'next/router.js',
+                'react$': 'react/index.js',
+                'react-dom$': 'react-dom/index.js',
+              },
+            },
+          ],
+        ],
+      }),
+      MINIFY && terser(),
+    ],
+    output: [
       {
         file: pkg.module,
         format: 'es',
