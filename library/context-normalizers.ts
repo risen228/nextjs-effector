@@ -3,7 +3,7 @@ import {
   GetStaticPropsContext,
   NextPageContext,
 } from 'next'
-import { NextRouter } from 'next/router'
+import { NextRouter } from 'next/router.js'
 import { ParsedUrlQuery } from 'querystring'
 import { env } from './env'
 import { PageContext, PageContextBase, StaticPageContext } from './types'

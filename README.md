@@ -42,15 +42,13 @@ At first, add `effector/babel-plugin` to your `.babelrc`:
 ```json
 {
   "presets": ["next/babel"],
-  "plugins": [["effector/babel-plugin", { "reactSsr": true }]]
+  "plugins": ["effector/babel-plugin"]
 }
 ```
 
 By doing that, all our Effector units will be created with unique `sid` constant, so we can safely serialize them for sending to the client.
 
-The `reactSsr` option is used to replace all `effector-react` imports with `effector-react/scope` version to ensure that `useStore`, `useEvent`, and the other hooks use the scope that was passed using `Provider`.
-
-Next, you need to create `effector` aliases to `.cjs` in your `next.config.js`:
+Next, you need to create CJS `effector` aliases in your `next.config.js`:
 
 ```javascript
 const path = require('path')
@@ -68,8 +66,8 @@ const nextConfig = {
       './node_modules/effector/effector.cjs.js'
     )
 
-    config.resolve.alias['effector-react/scope'] = path.resolve(
-      './node_modules/effector-react/scope.js'
+    config.resolve.alias['effector-react'] = path.resolve(
+      './node_modules/effector-react/effector-react.cjs.js'
     )
 
     return config

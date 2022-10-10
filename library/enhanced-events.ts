@@ -1,6 +1,6 @@
 import { createEvent, createStore, Event, sample } from 'effector'
-import { useEvent } from 'effector-react/scope'
-import { useRouter } from 'next/router'
+import { useEvent } from 'effector-react'
+import { useRouter } from 'next/router.js'
 import { useEffect } from 'react'
 import { ContextNormalizers } from './context-normalizers'
 import { assertStrict } from './shared'

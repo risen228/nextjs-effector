@@ -1,5 +1,5 @@
 import { fork, serialize } from 'effector'
-import { Provider } from 'effector-react/scope'
+import { Provider } from 'effector-react'
 import { NextComponentType } from 'next'
 import { AppContext, AppProps } from 'next/app'
 import React, { useRef } from 'react'
