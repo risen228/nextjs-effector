@@ -16,8 +16,8 @@ const nextConfig = {
       './node_modules/effector/effector.cjs.js'
     )
 
-    config.resolve.alias['effector-react/scope'] = path.resolve(
-      './node_modules/effector-react/scope.js'
+    config.resolve.alias['effector-react'] = path.resolve(
+      './node_modules/effector-react/effector-react.cjs.js'
     )
 
     return config
