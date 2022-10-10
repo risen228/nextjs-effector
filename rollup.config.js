@@ -58,8 +58,6 @@ const config = defineConfig([
                 'effector$': 'effector/effector.mjs',
                 'effector-react$': 'effector-react/effector-react.mjs',
                 'next/router$': 'next/router.js',
-                'react$': 'react/index.js',
-                'react-dom$': 'react-dom/index.js',
               },
             },
           ],
