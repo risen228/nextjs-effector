@@ -50,6 +50,7 @@ const config = defineConfig([
         babelrc: false,
         extensions: ['.js', '.jsx', '.ts', '.tsx'],
         presets: ['@babel/preset-typescript', '@babel/preset-react'],
+        babelHelpers: 'bundled',
         plugins: [
           [
             'module-resolver',
@@ -57,6 +58,7 @@ const config = defineConfig([
               alias: {
                 'effector$': 'effector/effector.mjs',
                 'effector-react$': 'effector-react/effector-react.mjs',
+                'effector-react/scope$': 'effector-react/scope.mjs',
                 'next/router$': 'next/router.js',
               },
             },
