@@ -29,9 +29,23 @@
 
 ## Installation
 
-```sh
-yarn add nextjs-effector
-```
+Due to some Next.js bundling issues, it's currently recommended to install `nextjs-effector` locally:
+
+1. [Download repository](https://github.com/risenforces/nextjs-effector/archive/refs/heads/release/latest.zip)
+2. Copy `library` folder contents into your project, for example into `src/nextjs-effector`
+3. Create the alias using tsconfig.json:
+
+   ```json
+   {
+     "compilerOptions": {
+       "baseUrl": "./",
+       "paths": {
+         "nextjs-effector": ["./src/nextjs-effector"],
+         "nextjs-effector/*": ["./src/nextjs-effector/*"]
+       }
+     }
+   }
+   ```
 
 ## Usage
 
@@ -47,35 +61,6 @@ At first, add `effector/babel-plugin` to your `.babelrc`:
 ```
 
 By doing that, all our Effector units will be created with unique `sid` constant, so we can safely serialize them for sending to the client.
-
-Next, you need to create CJS `effector` aliases in your `next.config.js`:
-
-```javascript
-const path = require('path')
-
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  reactStrictMode: true,
-  webpack: (config) => {
-    /*
-     * Prevent using effector .mjs extension in "web" version of bundle
-     * Otherwise, we can face different bugs when using effector
-     */
-
-    config.resolve.alias.effector = path.resolve(
-      './node_modules/effector/effector.cjs.js'
-    )
-
-    config.resolve.alias['effector-react'] = path.resolve(
-      './node_modules/effector-react/effector-react.cjs.js'
-    )
-
-    return config
-  },
-}
-
-module.exports = nextConfig
-```
 
 Also, check your `effector` and `effector-react` versions: they should match the requirements.
 
