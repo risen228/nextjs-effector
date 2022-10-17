@@ -4,6 +4,9 @@ const nextConfig = {
   eslint: {
     dirs: ['pages', 'src', 'library'],
   },
+  experimental: {
+    swcPlugins: ['@effector/swc-plugin'],
+  },
 }
 
 module.exports = nextConfig
