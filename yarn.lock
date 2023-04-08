@@ -459,6 +459,11 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
+"@effector/next@^0.1.3":
+  version "0.1.3"
+  resolved "https://registry.yarnpkg.com/@effector/next/-/next-0.1.3.tgz#953444d91661ad6d1950b32d4ea9baed4f840277"
+  integrity sha512-CMGngyrO35Nkgz72vc17H99CI/o5CPjwsvSz+qibU5q5PLsbXVDShI5FuzGXUwhjxiHbhwQu9JyxeJPZEnIkQQ==
+
 "@esbuild/linux-loong64@0.14.54":
   version "0.14.54"
   resolved "https://registry.yarnpkg.com/@esbuild/linux-loong64/-/linux-loong64-0.14.54.tgz#de2a4be678bd4d0d1ffbb86e6de779cde5999028"
