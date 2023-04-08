@@ -1,15 +1,15 @@
 {
   "name": "nextjs-effector",
+  "type": "module",
   "version": "0.0.0-set-by-ci",
-  "main": "dist/index.js",
   "exports": {
     ".": {
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.js",
-      "default": "./dist/index.mjs"
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
     }
   },
-  "module": "./dist/index.mjs",
+  "main": "dist/index.сjs",
+  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
     "dist/*"

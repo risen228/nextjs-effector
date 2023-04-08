@@ -14,7 +14,6 @@ const TYPECHECK = true
 const MINIFY = true
 
 const src = (file) => `library/${file}`
-const dist = (file) => `dist/${file}`
 
 const bundle = (input, { plugins = [], ...config }) =>
   defineConfig({
@@ -56,7 +55,6 @@ const config = defineConfig([
             'module-resolver',
             {
               alias: {
-                'effector$': 'effector/effector.mjs',
                 'next/router$': 'next/router.js',
               },
             },
