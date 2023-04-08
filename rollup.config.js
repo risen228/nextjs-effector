@@ -6,7 +6,6 @@ import typescript from '@rollup/plugin-typescript'
 import { defineConfig } from 'rollup'
 import bundleSize from 'rollup-plugin-bundle-size'
 import dts from 'rollup-plugin-dts'
-import esbuild from 'rollup-plugin-esbuild'
 import { terser } from 'rollup-plugin-terser'
 import pkg from './package.json'
 
@@ -26,21 +25,6 @@ const bundle = (input, { plugins = [], ...config }) =>
   })
 
 const config = defineConfig([
-  /* Compiled JS (CommonJS) */
-  bundle(src('index.ts'), {
-    plugins: [
-      TYPECHECK && typescript({ outputToFilesystem: false }),
-      esbuild(),
-      MINIFY && terser(),
-    ],
-    output: [
-      {
-        file: pkg.main,
-        format: 'cjs',
-      },
-    ],
-  }),
-
   /* Compiled JS (ESM) */
   bundle(src('index.ts'), {
     plugins: [
