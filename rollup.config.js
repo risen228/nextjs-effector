@@ -49,7 +49,7 @@ const config = defineConfig([
     ],
     output: [
       {
-        file: pkg.module,
+        file: pkg.main,
         format: 'es',
       },
     ],
