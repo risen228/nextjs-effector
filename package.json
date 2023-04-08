@@ -44,8 +44,8 @@
     "axios": "^0.27.2",
     "babel-plugin-module-resolver": "^4.1.0",
     "clsx": "^1.1.1",
-    "effector": "^22.3.0",
-    "effector-react": "^22.3.3",
+    "effector": "^22.7.0",
+    "effector-react": "^22.5.1",
     "esbuild": "^0.14.43",
     "eslint": "^8.16.0",
     "eslint-kit": "^5.5.0",
@@ -69,8 +69,8 @@
   },
   "peerDependencies": {
     "@effector/next": "^0.1.3",
-    "effector": ">=22.2.0",
-    "effector-react": ">=22.3.3",
+    "effector": "^22.7.0",
+    "effector-react": "^22.5.1",
     "next": ">=12.0.0",
     "react": ">=17.0.0",
     "react-dom": ">=17.0.0"

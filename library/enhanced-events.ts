@@ -1,5 +1,5 @@
 import { createEvent, createStore, Event, sample } from 'effector'
-import { useEvent } from 'effector-react/scope'
+import { useEvent } from 'effector-react'
 import { useRouter } from 'next/router'
 import { useEffect } from 'react'
 import { ContextNormalizers } from './context-normalizers'

@@ -56,13 +56,11 @@ At first, add `effector/babel-plugin` to your `.babelrc`:
 ```json
 {
   "presets": ["next/babel"],
-  "plugins": [["effector/babel-plugin", { "reactSsr": true }]]
+  "plugins": ["effector/babel-plugin"]
 }
 ```
 
 By doing that, all our Effector units will be created with unique `sid` constant, so we can safely serialize them for sending to the client.
-
-The `reactSsr` option is used to replace all `effector-react` imports with `effector-react/scope` version to ensure that `useStore`, `useEvent`, and the other hooks use the scope that is passed using `Provider`.
 
 Also, check your `effector` and `effector-react` versions: they should match the requirements.
 
