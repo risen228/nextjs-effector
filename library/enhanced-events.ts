@@ -1,5 +1,5 @@
 import { createEvent, createStore, Event, sample } from 'effector'
-import { useEvent } from 'effector-react/scope'
+import { useUnit } from 'effector-react'
 import { useRouter } from 'next/router'
 import { useEffect } from 'react'
 import { ContextNormalizers } from './context-normalizers'
@@ -18,7 +18,7 @@ export function enhancePageEvent<P extends AnyPayload>(
   event: Event<P>,
   options: EnhancedEventOptions = {}
 ): Event<P> {
-  const key = `${event.sid}-${JSON.stringify(options)}`
+  const key = `${event.sid}-runOnce:${options.runOnce ?? false}`
 
   const cached = enhancedEventsCache.get(key)
   if (cached) return cached
@@ -54,7 +54,7 @@ export function usePageEvent(
 
   // the function has a cache inside, so we can safely call it on every render
   const enhancedEvent = enhancePageEvent(event, options)
-  const boundEvent = useEvent(enhancedEvent)
+  const boundEvent = useUnit(enhancedEvent)
 
   useEffect(() => {
     const context = ContextNormalizers.router(router)

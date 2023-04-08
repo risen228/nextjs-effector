@@ -6,7 +6,6 @@ import typescript from '@rollup/plugin-typescript'
 import { defineConfig } from 'rollup'
 import bundleSize from 'rollup-plugin-bundle-size'
 import dts from 'rollup-plugin-dts'
-import esbuild from 'rollup-plugin-esbuild'
 import { terser } from 'rollup-plugin-terser'
 import pkg from './package.json'
 
@@ -14,7 +13,6 @@ const TYPECHECK = true
 const MINIFY = true
 
 const src = (file) => `library/${file}`
-const dist = (file) => `dist/${file}`
 
 const bundle = (input, { plugins = [], ...config }) =>
   defineConfig({
@@ -27,21 +25,6 @@ const bundle = (input, { plugins = [], ...config }) =>
   })
 
 const config = defineConfig([
-  /* Compiled JS (CommonJS) */
-  bundle(src('index.ts'), {
-    plugins: [
-      TYPECHECK && typescript({ outputToFilesystem: false }),
-      esbuild(),
-      MINIFY && terser(),
-    ],
-    output: [
-      {
-        file: pkg.main,
-        format: 'cjs',
-      },
-    ],
-  }),
-
   /* Compiled JS (ESM) */
   bundle(src('index.ts'), {
     plugins: [
@@ -56,9 +39,6 @@ const config = defineConfig([
             'module-resolver',
             {
               alias: {
-                'effector$': 'effector/effector.mjs',
-                'effector-react$': 'effector-react/effector-react.mjs',
-                'effector-react/scope$': 'effector-react/scope.mjs',
                 'next/router$': 'next/router.js',
               },
             },
@@ -69,7 +49,7 @@ const config = defineConfig([
     ],
     output: [
       {
-        file: pkg.module,
+        file: pkg.main,
         format: 'es',
       },
     ],
