@@ -18,7 +18,7 @@ export function enhancePageEvent<P extends AnyPayload>(
   event: Event<P>,
   options: EnhancedEventOptions = {}
 ): Event<P> {
-  const key = `${event.sid}-${JSON.stringify(options)}`
+  const key = `${event.sid}-runOnce:${options.runOnce ?? false}`
 
   const cached = enhancedEventsCache.get(key)
   if (cached) return cached
