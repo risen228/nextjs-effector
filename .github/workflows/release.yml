@@ -96,8 +96,8 @@ jobs:
       - name: Build package
         run: |
           yarn install --frozen-lockfile
-          yarn build
           yarn test
+          yarn build
 
       - name: Set version in package.json
         uses: reedyuk/npm-version@1.0.1
