@@ -6,7 +6,7 @@ import pkgJson from "./package.json" assert { type: "json" };
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-const external = Object.keys(pkgJson.peerDependencies);
+const external = [...Object.keys(pkgJson.peerDependencies), 'next/router.js'];
 
 export default defineConfig({
   build: {
