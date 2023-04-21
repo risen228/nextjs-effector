@@ -1743,8 +1743,10 @@ next@13.3.0:
     "@next/swc-win32-ia32-msvc" "13.3.0"
     "@next/swc-win32-x64-msvc" "13.3.0"
 
-nextjs-effector@../../:
-  version "0.0.0-set-by-ci"
+nextjs-effector@^0.50.0-beta.0:
+  version "0.50.0-beta.0"
+  resolved "https://registry.yarnpkg.com/nextjs-effector/-/nextjs-effector-0.50.0-beta.0.tgz#9d6d68d5191a9937eb2b273b7754a65506d2187f"
+  integrity sha512-7xs5eMHrujpcrAeIfBBwtPJAsOBCCrGLCiqP5B8J39fpwCZtYMLgYssFZtlC3p7WHlMSevaM/Acd+qmYczWVCQ==
 
 node-releases@^2.0.8:
   version "2.0.10"
