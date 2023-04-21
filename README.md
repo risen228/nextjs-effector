@@ -69,11 +69,11 @@ Finally, enhance your `App`:
 ```tsx
 /* pages/_app.tsx */
 
-import App from 'next/app'
-import { withEffector } from 'nextjs-effector'
+import App from "next/app";
+import { withEffector } from "nextjs-effector";
 
 // Passing effector-react exports is required to access the Scope
-export default withEffector(App)
+export default withEffector(App);
 ```
 
 After that, the `App` will be wrapped in Effector's Scope Provider. `withEffector` function uses the smart Scope management logic under the hood, so you can focus on the writing a business logic without thinking about problems of integrating Effector into your Next.js application.
@@ -95,29 +95,29 @@ Assume we have the following Effector events:
 
 ```tsx
 /* Needed everywhere */
-export const loadAuthenticatedUser = createEvent()
-export const loadTranslations = createEvent()
+export const loadAuthenticatedUser = createEvent();
+export const loadTranslations = createEvent();
 
 /* Needed only on the post page */
-export const loadPostCategories = createEvent()
-export const loadPostContent = createEvent()
+export const loadPostCategories = createEvent();
+export const loadPostContent = createEvent();
 ```
 
 Let's group them into **shared** and **specific**:
 
 ```tsx
-export const appStarted = createEvent()
-export const postPageStarted = createEvent()
+export const appStarted = createEvent();
+export const postPageStarted = createEvent();
 
 sample({
   clock: appStarted,
-  target: [loadAuthenticatedUser, loadTranslations]
-})
+  target: [loadAuthenticatedUser, loadTranslations],
+});
 
 sample({
   clock: postPageStarted,
-  target: [loadPostCategories, loadPostContent]
-})
+  target: [loadPostCategories, loadPostContent],
+});
 ```
 
 We want the `appStarted` to be called once in application lifecycle, and the `postPageStarted` to be called on requesting / navigating to Post page. `nextjs-effector` library provides a 2-level GIP factory to cover this case:
@@ -125,13 +125,13 @@ We want the `appStarted` to be called once in application lifecycle, and the `po
 ```tsx
 export const createGIP = createGIPFactory({
   // Will be called once
-  sharedEvents: [appStarted]
-})
+  sharedEvents: [appStarted],
+});
 
 PostPage.getInitialProps = createGIP({
   // Will be called on visiting PostPage
-  pageEvent: postPageStarted
-})
+  pageEvent: postPageStarted,
+});
 ```
 
 Also, the library provides `createGSSPFactory` for `getServerSideProps` and `createGSPFactory` for `getStaticProps`. They have almost the same API, but both of them run `sharedEvents` on each request / static page generation.
@@ -147,11 +147,11 @@ Although `getServerSideProps` is the most modern approach, we strongly recommend
  * 1. Create events
  * GIP accepts the events with "PageContext" or "void" payload types
  */
-export const appStarted = createEvent()
-export const appStarted = createEvent<PageContext>()
-export const pageStarted = createEvent()
-export const pageStarted = createEvent<PageContext>()
-export const pageStarted = createEvent<PageContext<Props, Params, Query>>()
+export const appStarted = createEvent();
+export const appStarted = createEvent<PageContext>();
+export const pageStarted = createEvent();
+export const pageStarted = createEvent<PageContext>();
+export const pageStarted = createEvent<PageContext<Props, Params, Query>>();
 
 /*
  * 2. Create GIP factory
@@ -170,8 +170,8 @@ export const createGIP = createGIPFactory({
   // Allows to customize server-side Scope creation process
   // By default, the library just uses fork(), like below
   // But you can fill the stores in scope with your values (cookies, for example)
-  createServerScope: () => fork()
-})
+  createServerScope: () => fork(),
+});
 
 /*
  * 3. Create GIP
@@ -187,9 +187,11 @@ Page.getInitialProps = createGIP({
   // It's run after all events are settled, but before Scope serialization
   // So, here you can safely call allSettled
   async customize({ scope, context }) {
-    return { /* Props */ }
-  }
-})
+    return {
+      /* Props */
+    };
+  },
+});
 ```
 
 #### `getServerSideProps` (only server side)
@@ -201,11 +203,11 @@ For every-day cases we recommend using `getInitialProps` instead. But `getServer
  * 1. Create events
  * GSSP accepts the events with "PageContext" or "void" payload types
  */
-export const appStarted = createEvent()
-export const appStarted = createEvent<PageContext>()
-export const pageStarted = createEvent()
-export const pageStarted = createEvent<PageContext>()
-export const pageStarted = createEvent<PageContext<Props, Params, Query>>()
+export const appStarted = createEvent();
+export const appStarted = createEvent<PageContext>();
+export const pageStarted = createEvent();
+export const pageStarted = createEvent<PageContext>();
+export const pageStarted = createEvent<PageContext<Props, Params, Query>>();
 
 /*
  * 2. Create GSSP factory
@@ -214,7 +216,7 @@ export const pageStarted = createEvent<PageContext<Props, Params, Query>>()
 export const createGSSP = createGSSPFactory({
   // Will be called on first request and on each page navigation (always on server side)
   sharedEvents: [appStarted],
-})
+});
 
 /*
  * 3. Create GSSP
@@ -229,9 +231,11 @@ export const getServerSideProps = createGSSP({
   // It's run after all events are settled, but before Scope serialization
   // So, here you can safely call allSettled
   customize({ scope, context }) {
-    return { /* GSSP Result */ }
-  }
-})
+    return {
+      /* GSSP Result */
+    };
+  },
+});
 ```
 
 #### `getStaticProps` (only server side)
@@ -242,11 +246,11 @@ Recommended for static pages.
 /*
  * 1. Create events
  */
-export const appStarted = createEvent()
-export const appStarted = createEvent<StaticPageContext>()
-export const pageStarted = createEvent()
-export const pageStarted = createEvent<StaticPageContext>()
-export const pageStarted = createEvent<StaticPageContext<Props, Params>>()
+export const appStarted = createEvent();
+export const appStarted = createEvent<StaticPageContext>();
+export const pageStarted = createEvent();
+export const pageStarted = createEvent<StaticPageContext>();
+export const pageStarted = createEvent<StaticPageContext<Props, Params>>();
 
 /*
  * 2. Create GSP factory
@@ -255,7 +259,7 @@ export const pageStarted = createEvent<StaticPageContext<Props, Params>>()
 export const createGSP = createGSPFactory({
   // Will be called on each page generation (always on server side)
   sharedEvents: [appStarted],
-})
+});
 
 /*
  * 3. Create GSP
@@ -269,9 +273,11 @@ export const getStaticProps = createGSP({
   // It's run after all events are settled, but before Scope serialization
   // So, here you can safely call allSettled
   customize({ scope, context }) {
-    return { /* GSP Result */ }
-  }
-})
+    return {
+      /* GSP Result */
+    };
+  },
+});
 ```
 
 ### Advanced Page Events Usage
@@ -288,13 +294,15 @@ Usage:
 
 ```tsx
 const Page: NextPage<Props> = () => {
-  usePageEvent(appStarted, { runOnce: true })
-  return <AboutPage />
-}
+  usePageEvent(appStarted, { runOnce: true });
+  return <AboutPage />;
+};
 
-export const getStaticProps: GetStaticProps<Props> = async () => { /* ... */ }
+export const getStaticProps: GetStaticProps<Props> = async () => {
+  /* ... */
+};
 
-export default Page
+export default Page;
 ```
 
 #### `enhancePageEvent` (manual flow control)
@@ -310,8 +318,8 @@ const enhancedEvent = enhancePageEvent(appStarted, {
   // Works like the "runSharedOnce" option in GIP fabric, but for the single event
   // This option applies to both client and server environments:
   // If the enhanced event was called on the server side, it won't be called on the client side
-  runOnce: true
-})
+  runOnce: true,
+});
 ```
 
 #### Utility functions
@@ -320,7 +328,7 @@ const enhancedEvent = enhancePageEvent(appStarted, {
 /*
  * PageContext has the "env" field with "client" or "server" value,
  * so you can determine the environment where the code is executed
- * 
+ *
  * The library provides useful types and type-guards for these purposes
  */
 import {
@@ -383,25 +391,23 @@ export const createGIP = createGIPFactory({
   sharedEvents: [appStarted],
   createServerScope: (context) => {
     return fork({
-      values: [
-        [$cookies, context.req?.headers.cookie ?? '']
-      ],
-    })
+      values: [[$cookies, context.req?.headers.cookie ?? ""]],
+    });
   },
-})
+});
 ```
 
 Also, you can access `req` object in effector logic by using `isServerContext`
 
 ```ts
-import { isServerPageContext } from 'nextjs-effector'
+import { isServerPageContext } from "nextjs-effector";
 
 sample({
   source: appStarted,
   filter: isServerPageContext,
   fn: (context) => context.req.cookie,
-  target: $cookies
-})
+  target: $cookies,
+});
 ```
 
 ## Common Questions
@@ -425,16 +431,16 @@ That's why `getInitialProps` is more recommended way to bind your Effector model
 You can create GIP / GSSP fabric without `sharedEvents`, and define the flow manually:
 
 ```tsx
-const createGIP = createGIPFactory()
+const createGIP = createGIPFactory();
 
 Page.getInitialProps = createGIP({
-  pageEvent: pageStarted
-})
+  pageEvent: pageStarted,
+});
 
 sample({
   source: pageStarted,
-  target: appStarted
-})
+  target: appStarted,
+});
 ```
 
 Also, you can use `enhancePageEvent` to run specific events only once in the application lifecycle.

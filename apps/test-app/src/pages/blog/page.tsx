@@ -12,7 +12,7 @@ export function BlogPage() {
       title="Blog"
       content={posts.map((post) => {
         return (
-          <Link key={post.id} href={paths.blogPost(post.slug)} passHref={true}>
+          <Link legacyBehavior key={post.id} href={paths.blogPost(post.slug)} passHref={true}>
             <a href="_">
               <h3>{post.title}</h3>
             </a>
