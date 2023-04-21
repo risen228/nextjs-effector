@@ -1,0 +1,17 @@
+.header {
+  @apply flex items-center;
+  @apply bg-black text-white;
+}
+
+.logo {
+  @apply text-xl;
+}
+
+.navbar {
+  @apply m-auto;
+}
+
+.navlink {
+  @apply inline-block p-4;
+  @apply hover:text-fuchsia-400;
+}
