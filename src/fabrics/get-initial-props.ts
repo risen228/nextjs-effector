@@ -23,7 +23,7 @@ export type CustomizeGIP<P extends AnyProps = AnyProps> = (
   params: CustomizeGIPParams
 ) => P | Promise<P>
 
-export interface CreateGIPConfig<P> {
+export interface CreateGIPConfig<P extends AnyProps = AnyProps> {
   pageEvent?: EmptyOrPageEvent<any, any>
   customize?: CustomizeGIP<P>
 }
