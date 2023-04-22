@@ -118,9 +118,9 @@ Also, the library provides `createGSSPFactory` for `getServerSideProps` and `cre
 
 ### Factories
 
-#### `getInitialProps` (server and client side)
+#### `getInitialProps` (runs both at server and client side)
 
-Although `getServerSideProps` is the most modern approach, we strongly recommend to use `getInitialProps` in most cases with Effector. It's easier to work with, and doesn't require executing the shared logic on each request, including navigation between pages.
+https://nextjs.org/docs/api-reference/data-fetching/get-initial-props
 
 ```tsx
 /*
@@ -174,9 +174,9 @@ Page.getInitialProps = createGIP({
 });
 ```
 
-#### `getServerSideProps` (only server side)
+#### `getServerSideProps` (runs only at server side)
 
-For every-day cases we recommend using `getInitialProps` instead. But `getServerSideProps` may be useful in some edge-cases like executing logic with heavy computations, or accessing the data available only on server-side.
+https://nextjs.org/docs/api-reference/data-fetching/get-server-side-props
 
 ```tsx
 /*
@@ -218,9 +218,9 @@ export const getServerSideProps = createGSSP({
 });
 ```
 
-#### `getStaticProps` (only server side)
+#### `getStaticProps` (runs only at server side)
 
-Recommended for static pages.
+https://nextjs.org/docs/api-reference/data-fetching/get-static-props
 
 ```tsx
 /*
@@ -397,14 +397,6 @@ sample({
 The place depends on your architecture. But one thing is certain - **creating factories on each page is a really bad idea**. They are designed to simplify and encapsulate the repeated logic parts.
 
 For example, with [`Feature Sliced Design`](https://feature-sliced.design) you might consider creating `layouts` layer, which can be used to create reusable page layouts and factories.
-
-### Why in GSSP the shared events are called on each request?
-
-`getServerSideProps`, unlike the `getInitialProps`, is run only on server-side. The problem is that `pageEvent` logic may depend on global shared data. So, we need either to run shared events on each request (as we do now), or get this global shared data in some other way, for example by sending it back from the client in a serialized form (sounds risky and hard).
-
-Also, to check if shared events are need to be executed, we should either to ask it from the client, or persist this data on server. The both ways sound hard to implement.
-
-That's why `getInitialProps` is more recommended way to bind your Effector models to Page lifecycle. When navigating between pages, it runs on client side, so we can easily omit the app event execution.
 
 ### I need to run sharedEvents and pageEvent in parallel. How can I do that?
 
