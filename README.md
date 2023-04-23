@@ -21,31 +21,11 @@
   - [Prerelease from](#prerelease-flow)
   - [Conventions](#conventions)
 
-## Requirements
-
-- `next` >= `12.0.0`
-- `effector` >= `22.2.0` (effector Halley with many syntax changes)
-- `effector-react` >= `22.3.3` (has important bugfix for Next.js)
-
 ## Installation
 
-Due to some Next.js bundling issues, it's currently recommended to install `nextjs-effector` locally:
-
-1. [Download repository](https://github.com/risenforces/nextjs-effector/archive/refs/heads/release/latest.zip)
-2. Copy `library` folder contents into your project, for example into `src/nextjs-effector`
-3. Create the alias using tsconfig.json:
-
-   ```json
-   {
-     "compilerOptions": {
-       "baseUrl": "./",
-       "paths": {
-         "nextjs-effector": ["./src/nextjs-effector"],
-         "nextjs-effector/*": ["./src/nextjs-effector/*"]
-       }
-     }
-   }
-   ```
+```sh
+yarn add nextjs-effector @effector/next effector-react effector
+```
 
 ## Usage
 
@@ -60,9 +40,9 @@ At first, add `effector/babel-plugin` to your `.babelrc`:
 }
 ```
 
-By doing that, all our Effector units will be created with unique `sid` constant, so we can safely serialize them for sending to the client.
+By doing that, all our Effector units will be created with `sid` constant, which is unique and stable between the server and the client, so we can safely serialize store values for sending to the client.
 
-Also, check your `effector` and `effector-react` versions: they should match the requirements.
+You can also try out [the official `@effector/swc-plugin`](https://github.com/effector/swc-plugin), which is still in early beta as the whole SWC-plugins system itself.
 
 Finally, enhance your `App`:
 
@@ -76,7 +56,7 @@ import { withEffector } from "nextjs-effector";
 export default withEffector(App);
 ```
 
-After that, the `App` will be wrapped in Effector's Scope Provider. `withEffector` function uses the smart Scope management logic under the hood, so you can focus on the writing a business logic without thinking about problems of integrating Effector into your Next.js application.
+After that, the `App` will be wrapped in Effector's Scope Provider. The `withEffector` function uses `@effector/next` under the hood, which handles all of Next.js caveats and special requirements for us. This way you can focus on the writing a business logic without thinking about problems of integrating Effector into your Next.js application.
 
 ### Main Concepts
 
@@ -444,6 +424,32 @@ sample({
 ```
 
 Also, you can use `enhancePageEvent` to run specific events only once in the application lifecycle.
+
+### What do i do if there are bundling issues?
+
+Since Next.js 12 ESM imports are prioritized over CommonJS imports. While CJS-only dependencies are still supported, it is not recommended to use them, as those can lead to library doubles in the bundle and really weird bugs.
+
+You can read about it [here](https://github.com/effector/next#esm-dependencies-and-library-duplicates-in-the-bundle)
+
+In case if there is a CommonJS-only dependency, which uses effector and you absouletly need it and author can't fix it - you can copy the library to your project as the *last resort measure*.
+
+#### How to
+
+1. [Download repository](https://github.com/risenforces/nextjs-effector/archive/refs/heads/release/latest.zip)
+2. Copy `library` folder contents into your project, for example into `src/nextjs-effector`
+3. Create the alias using tsconfig.json:
+
+   ```json
+   {
+     "compilerOptions": {
+       "baseUrl": "./",
+       "paths": {
+         "nextjs-effector": ["./src/nextjs-effector"],
+         "nextjs-effector/*": ["./src/nextjs-effector/*"]
+       }
+     }
+   }
+   ```
 
 ## Contributing
 
