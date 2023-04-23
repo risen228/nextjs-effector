@@ -108,6 +108,7 @@ export const ContextNormalizers = {
       params: context.params ?? {},
       query: removeParamsFromQuery(context.query, context.params ?? {}),
       pathname: buildPathname(context),
+      asPath: context.resolvedUrl,
     })
 
     return Object.defineProperties(base, {
