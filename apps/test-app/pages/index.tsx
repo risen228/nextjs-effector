@@ -1,6 +1,6 @@
 import { NextPage } from 'next'
+import { createGIP } from '@app/layouts/factories'
 import { HomePage, pageStarted } from '@app/pages/home'
-import { createGIP } from '@app/pages/shared'
 
 const Page: NextPage = () => {
   console.info('[Render] HomePage')

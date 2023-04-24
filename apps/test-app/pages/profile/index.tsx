@@ -1,8 +1,8 @@
 import { NextPage } from 'next'
 import NextErrorPage from 'next/error'
+import { createGIP } from '@app/layouts/factories'
 import { MyProfilePage, pageStarted } from '@app/pages/my-profile'
 import { $bio } from '@app/pages/my-profile/model'
-import { createGIP } from '@app/pages/shared'
 
 interface Props {
   notFound?: boolean

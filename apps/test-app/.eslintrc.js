@@ -12,4 +12,10 @@ module.exports = configure({
     presets.effector(),
     presets.typescript(),
   ],
+
+  extend: {
+    rules: {
+      'effector/no-watch': 'off',
+    },
+  },
 })

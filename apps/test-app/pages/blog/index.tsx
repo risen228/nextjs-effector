@@ -1,8 +1,8 @@
 import { NextPage } from 'next'
 import { usePageEvent } from 'nextjs-effector'
+import { createGSP } from '@app/layouts/factories'
 import { BlogPage, pageStarted } from '@app/pages/blog'
-import { createGSP } from '@app/pages/shared/bindings'
-import { appStarted } from '@app/pages/shared/model'
+import { appStarted } from '@app/shared/events'
 
 const Page: NextPage = () => {
   console.info('[Render] BlogPage')

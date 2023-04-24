@@ -1,1 +1,0 @@
-export { createGIP } from './bindings'
