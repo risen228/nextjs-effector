@@ -1,9 +1,9 @@
 import { GetStaticPaths, NextPage } from 'next'
 import { usePageEvent } from 'nextjs-effector'
+import { createGSP } from '@app/layouts/factories'
 import { BlogPostPage, pageStarted } from '@app/pages/blog-post'
-import { createGSP } from '@app/pages/shared/bindings'
-import { appStarted } from '@app/pages/shared/model'
 import { localApi } from '@app/shared/api'
+import { appStarted } from '@app/shared/events'
 
 const Page: NextPage = () => {
   console.info('[Render] BlogPostPage')

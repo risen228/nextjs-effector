@@ -28,6 +28,10 @@ yarn add nextjs-effector @effector/next effector-react effector
 
 ## Usage
 
+### Examples
+
+- [Test App](/apps/test-app) - used for testing the `nestjs-effector` library. You can find some architecture notes in [README](/apps/test-app/README.md).
+
 ### Initial setup
 
 First, add `effector/babel-plugin` to your `.babelrc`:
