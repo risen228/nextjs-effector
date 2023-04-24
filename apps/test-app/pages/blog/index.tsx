@@ -7,7 +7,9 @@ import { appStarted } from '@app/pages/shared/model'
 const Page: NextPage = () => {
   console.info('[Render] BlogPage')
 
+  // eslint-disable-next-line effector/mandatory-scope-binding
   usePageEvent(appStarted, { runOnce: true })
+
   return <BlogPage />
 }
 

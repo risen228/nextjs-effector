@@ -30,7 +30,7 @@ export type CustomizeGSSP<
   D extends PreviewData = PreviewData
 > = (
   params: CustomizeGSSPParams<Q, D>
-) => GetServerSidePropsResult<P> | Promise<GetServerSidePropsResult<P>>
+) => void | Promise<void> | GetServerSidePropsResult<P> | Promise<GetServerSidePropsResult<P>>
 
 export interface CreateGSSPConfig<
   P extends AnyProps,
@@ -67,20 +67,20 @@ export function createGSSPFactory({
         await allSettled(event, { scope, params: normalizedContext })
       }
 
-      /*
-       * Get user's GSSP result
-       * Fallback to empty props object if no custom GSSP used
-       */
-      const gsspResult = customize
-        ? await customize({ scope, context })
-        : { props: {} as P }
+      let gsspResult: GetServerSidePropsResult<P> = { props: {} as P }
 
-      const hasProps = 'props' in gsspResult
+      /*
+       * Override with user's GSSP result when "customize" defined
+       */
+      if (customize) {
+        const customGsspResult = await customize({ scope, context })
+        gsspResult = customGsspResult ?? { props: {} as P }
+      }
 
       /*
        * Pass 404 and redirects as they are
        */
-      if (!hasProps) {
+      if ('redirect' in gsspResult || 'notFound' in gsspResult) {
         return gsspResult
       }
 

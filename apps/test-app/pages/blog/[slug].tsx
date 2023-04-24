@@ -8,7 +8,9 @@ import { localApi } from '@app/shared/api'
 const Page: NextPage = () => {
   console.info('[Render] BlogPostPage')
 
+  // eslint-disable-next-line effector/mandatory-scope-binding
   usePageEvent(appStarted, { runOnce: true })
+
   return <BlogPostPage />
 }
 
@@ -28,6 +30,7 @@ export const getStaticProps = createGSP<
   { slug: string }
 >({
   pageEvent: pageStarted,
+  customize: () => ({ revalidate: 60 }),
 })
 
 export default Page

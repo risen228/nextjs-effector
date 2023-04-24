@@ -1,11 +1,11 @@
-import { useStore } from 'effector-react'
+import { useUnit } from 'effector-react'
 import { BaseTemplate } from '@app/computed/widgets/layouts'
 import { $authenticatedUser } from '@app/entities/authenticated-user'
 import { $bio } from './model'
 
 export function MyProfilePage() {
-  const user = useStore($authenticatedUser)
-  const bio = useStore($bio)
+  const user = useUnit($authenticatedUser)
+  const bio = useUnit($bio)
 
   return (
     <BaseTemplate

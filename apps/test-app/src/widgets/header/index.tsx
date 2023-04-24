@@ -1,5 +1,5 @@
 import clsx from 'clsx'
-import { useStore } from 'effector-react'
+import { useUnit } from 'effector-react'
 import Link from 'next/link'
 import { $authenticatedUser } from '@app/entities/authenticated-user'
 import { paths } from '@app/shared/routing'
@@ -26,7 +26,7 @@ const routes: Route[] = [
 ]
 
 export function Header() {
-  const user = useStore($authenticatedUser)
+  const user = useUnit($authenticatedUser)
 
   return (
     <header className={styles.header}>
@@ -37,7 +37,7 @@ export function Header() {
       </Link>
       <nav className={styles.navbar}>
         {routes.map((route) => (
-          <Link legacyBehavior key={route.path} href={route.path} passHref>
+          <Link key={route.path} legacyBehavior href={route.path} passHref>
             <a className={styles.navlink} href="_">
               {route.title}
             </a>

@@ -166,9 +166,8 @@ Page.getInitialProps = createGIP({
   // It's run after all events are settled but before Scope serialization
   // So, here you can safely call allSettled
   async customize({ scope, context }) {
-    return {
-      /* Props */
-    };
+    // You can also return nothing (there will be no impact on props in this case)
+    return { /* Props */ };
   },
 });
 ```
@@ -210,9 +209,8 @@ export const getServerSideProps = createGSSP({
   // It's run after all events are settled but before Scope serialization
   // So, here you can safely call allSettled
   customize({ scope, context }) {
-    return {
-      /* GSSP Result */
-    };
+    // You can omit the "props" field (there will be no impact on props in this case)
+    return { /* GSSP Result */ };
   },
 });
 ```
@@ -252,9 +250,8 @@ export const getStaticProps = createGSP({
   // It's run after all events are settled but before Scope serialization
   // So, here you can safely call allSettled
   customize({ scope, context }) {
-    return {
-      /* GSP Result */
-    };
+    // You can omit the "props" field (there will be no impact on props in this case)
+    return { /* GSP Result */ };
   },
 });
 ```
