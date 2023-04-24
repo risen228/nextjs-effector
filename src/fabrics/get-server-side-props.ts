@@ -4,12 +4,16 @@ import {
   GetServerSidePropsContext,
   GetServerSidePropsResult,
   PreviewData,
+  Redirect,
 } from 'next'
 import { ParsedUrlQuery } from 'querystring'
 import { INITIAL_STATE_KEY } from '../constants'
 import { ContextNormalizers } from '../context-normalizers'
 import { isPageEvent } from '../shared'
-import { AnyProps, EmptyOrPageEvent } from '../types'
+import { AnyProps, EmptyOrPageEvent, NonPromise } from '../types'
+
+export type GetServerSidePropsExitResult = { redirect: Redirect } | { notFound: true };
+export type GetServerSidePropsWithoutExitResult<Props> = Exclude<GetServerSidePropsResult<Props>, GetServerSidePropsExitResult>;
 
 export interface CreateAppGSSPConfig {
   sharedEvents?: EmptyOrPageEvent<any, any>[]
@@ -40,6 +44,7 @@ export interface CreateGSSPConfig<
   pageEvent?: EmptyOrPageEvent<any, any>
   customize?: CustomizeGSSP<P, Q, D>
 }
+
 
 export function createGSSPFactory({
   sharedEvents = [],
@@ -75,13 +80,14 @@ export function createGSSPFactory({
         ? await customize({ scope, context })
         : { props: {} as P }
 
-      const hasProps = 'props' in gsspResult
 
       /*
        * Pass 404 and redirects as they are
        */
-      if (!hasProps) {
-        return gsspResult
+      if(['notFound', 'redirect'].some(v => v in gsspResult)) {
+        return gsspResult as GetServerSidePropsExitResult
+      } else {
+        (gsspResult as GetServerSidePropsWithoutExitResult<P>).props = (gsspResult as GetServerSidePropsWithoutExitResult<P>).props ?? {} as P
       }
 
       /*
@@ -91,11 +97,16 @@ export function createGSSPFactory({
         [INITIAL_STATE_KEY]: serialize(scope),
       }
 
+      // Handle props value as promise
+      if((gsspResult as GetServerSidePropsWithoutExitResult<P>).props instanceof Promise) {
+        (gsspResult as GetServerSidePropsWithoutExitResult<P>).props = (await (gsspResult as GetServerSidePropsWithoutExitResult<P>).props) as NonPromise<P>;
+      }
+      
       /*
        * Mix serialized Effector Scope values into the user props
        */
-      gsspResult.props = await gsspResult.props
-      Object.assign(gsspResult.props, effectorProps)
+      
+      Object.assign((gsspResult as GetServerSidePropsWithoutExitResult<P>).props, effectorProps)
 
       return gsspResult
     }
