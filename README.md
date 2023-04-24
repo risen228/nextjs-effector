@@ -1,6 +1,5 @@
 ## Navigation
 
-- [Requirements](#requirements)
 - [Installation](#installation)
 - [Usage](#usage)
   - [Initial setup](#initial-setup)
@@ -10,7 +9,7 @@
     - [`getServerSideProps`](#getserversideprops-only-server-side)
     - [`getStaticProps`](#getstaticprops-only-server-side)
   - [Advanced Page Events Usage](#advanced-page-events-usage)
-    - [`usePageEvent`](#usepageevent-only-client-side)
+    - [`usePageEvent`](#usepageevent-useful-on-the-client-side)
     - [`enhancePageEvent`](#enhancepageevent-manual-flow-control)
 - [Recipes](#recipes)
   - [Cookies](#cookies)
@@ -31,7 +30,7 @@ yarn add nextjs-effector @effector/next effector-react effector
 
 ### Initial setup
 
-At first, add `effector/babel-plugin` to your `.babelrc`:
+First, add `effector/babel-plugin` to your `.babelrc`:
 
 ```json
 {
@@ -56,13 +55,13 @@ import { withEffector } from "nextjs-effector";
 export default withEffector(App);
 ```
 
-After that, the `App` will be wrapped in Effector's Scope Provider. The `withEffector` function uses `@effector/next` under the hood, which handles all of Next.js caveats and special requirements for us. This way you can focus on the writing a business logic without thinking about problems of integrating Effector into your Next.js application.
+After that, the `App` will be wrapped in Effector's Scope Provider. The `withEffector` function uses `@effector/next` under the hood, which handles all of Next.js caveats and special requirements for us. This way you can focus on writing a business logic without thinking about the problems of integrating Effector into your Next.js application.
 
 ### Main Concepts
 
-Basically, there are 2 types of data in any application:
+There are 2 types of data in any application:
 
-- **Shared** - used in almost every page (translations, logged user info)
+- **Shared** - used on almost every page (translations, logged user info)
 - **Specific** - used only in the relevant pages (post content on post page, group info on group page)
 
 Usually, we want these conditions to be met:
@@ -78,7 +77,7 @@ Assume we have the following Effector events:
 export const loadAuthenticatedUser = createEvent();
 export const loadTranslations = createEvent();
 
-/* Needed only on the post page */
+/* Needed only on the Post page */
 export const loadPostCategories = createEvent();
 export const loadPostContent = createEvent();
 ```
@@ -100,7 +99,7 @@ sample({
 });
 ```
 
-We want the `appStarted` to be called once in application lifecycle, and the `postPageStarted` to be called on requesting / navigating to Post page. `nextjs-effector` library provides a 2-level GIP factory to cover this case:
+We want the `appStarted` to be called once in the application lifecycle and the `postPageStarted` to be called on requesting/navigating to the Post page. `nextjs-effector` library provides a 2-level GIP factory to cover this case:
 
 ```tsx
 export const createGIP = createGIPFactory({
@@ -118,9 +117,9 @@ Also, the library provides `createGSSPFactory` for `getServerSideProps` and `cre
 
 ### Factories
 
-#### `getInitialProps` (server and client side)
+#### `getInitialProps` (server and client-side)
 
-Although `getServerSideProps` is the most modern approach, we strongly recommend to use `getInitialProps` in most cases with Effector. It's easier to work with, and doesn't require executing the shared logic on each request, including navigation between pages.
+`getInitialProps` is easier to work with and doesn't require executing the shared logic on each request, including navigation between pages.
 
 ```tsx
 /*
@@ -143,11 +142,11 @@ export const createGIP = createGIPFactory({
   // - Client side on navigation (only if not called yet)
   sharedEvents: [appStarted],
 
-  // Allows to specify shared events behavior
+  // Allows specifying shared events behavior
   // When "false", the shared events run like pageEvent
   runSharedOnce: true,
 
-  // Allows to customize server-side Scope creation process
+  // Allows customizing server-side Scope creation process
   // By default, the library just uses fork(), like below
   // But you can fill the stores in scope with your values (cookies, for example)
   createServerScope: () => fork(),
@@ -155,7 +154,7 @@ export const createGIP = createGIPFactory({
 
 /*
  * 3. Create GIP
- * Usually, it's done inside "pages" directory
+ * Usually, it's done inside the "pages" directory
  */
 Page.getInitialProps = createGIP({
   // Will be called on each page visit:
@@ -163,8 +162,8 @@ Page.getInitialProps = createGIP({
   // - Client side on navigation (even if already called)
   pageEvent: pageStarted,
 
-  // You can define your custom logic using "customize" function
-  // It's run after all events are settled, but before Scope serialization
+  // You can define your custom logic using the "customize" function
+  // It's run after all events are settled but before Scope serialization
   // So, here you can safely call allSettled
   async customize({ scope, context }) {
     return {
@@ -174,9 +173,9 @@ Page.getInitialProps = createGIP({
 });
 ```
 
-#### `getServerSideProps` (only server side)
+#### `getServerSideProps` (only server-side)
 
-For every-day cases we recommend using `getInitialProps` instead. But `getServerSideProps` may be useful in some edge-cases like executing logic with heavy computations, or accessing the data available only on server-side.
+For everyday cases, we recommend using `getInitialProps` instead. But `getServerSideProps` may be useful in some edge cases like executing logic with heavy computations, or accessing the data available only on the server side.
 
 ```tsx
 /*
@@ -194,21 +193,21 @@ export const pageStarted = createEvent<PageContext<Props, Params, Query>>();
  * The place depends on your architecture
  */
 export const createGSSP = createGSSPFactory({
-  // Will be called on first request and on each page navigation (always on server side)
+  // Will be called on the first request and each page navigation (always on the server side)
   sharedEvents: [appStarted],
 });
 
 /*
  * 3. Create GSSP
- * Usually, it's done inside "pages" directory
+ * Usually, it's done inside the "pages" directory
  */
 export const getServerSideProps = createGSSP({
-  // Will be called on each page navigation (always on server side)
+  // Will be called on each page navigation (always on the server side)
   // Always called after shared events
   pageEvent: pageStarted,
 
-  // You can define your custom logic using "customize" function
-  // It's run after all events are settled, but before Scope serialization
+  // You can define your custom logic using the "customize" function
+  // It's run after all events are settled but before Scope serialization
   // So, here you can safely call allSettled
   customize({ scope, context }) {
     return {
@@ -218,7 +217,7 @@ export const getServerSideProps = createGSSP({
 });
 ```
 
-#### `getStaticProps` (only server side)
+#### `getStaticProps` (only server-side)
 
 Recommended for static pages.
 
@@ -237,20 +236,20 @@ export const pageStarted = createEvent<StaticPageContext<Props, Params>>();
  * The place depends on your architecture
  */
 export const createGSP = createGSPFactory({
-  // Will be called on each page generation (always on server side)
+  // Will be called on each page generation (always on the server side)
   sharedEvents: [appStarted],
 });
 
 /*
  * 3. Create GSP
- * Usually, it's done inside "pages" directory
+ * Usually, it's done inside the "pages" directory
  */
 export const getStaticProps = createGSP({
-  // Will be called on each page generation (always on server side)
+  // Will be called on each page generation (always on the server side)
   pageEvent: pageStarted,
 
-  // You can define your custom logic using "customize" function
-  // It's run after all events are settled, but before Scope serialization
+  // You can define your custom logic using the "customize" function
+  // It's run after all events are settled but before Scope serialization
   // So, here you can safely call allSettled
   customize({ scope, context }) {
     return {
@@ -262,7 +261,7 @@ export const getStaticProps = createGSP({
 
 ### Advanced Page Events Usage
 
-#### `usePageEvent` (useful on client side)
+#### `usePageEvent` (useful on the client side)
 
 Executes the provided `Event<void> | Event<PageContext>` on the client side.
 
@@ -336,14 +335,14 @@ sample({
 sample({
   source: pageStartedOnServer,
   fn: (context) => {
-    // You can access "req" and "res" on server side
+    // You can access "req" and "res" on the server side
     const { req, res } = context
     return req.cookie
   }
 })
 
 /*
- * GSP accepts the events with "StaticPageContext | void" payload
+ * GSP accepts the events with the "StaticPageContext | void" payload
  * Unlike PageContext, the StaticPageContext doesn't include query
  * and some other properties
  */
@@ -377,7 +376,7 @@ export const createGIP = createGIPFactory({
 });
 ```
 
-Also, you can access `req` object in effector logic by using `isServerContext`
+Also, you can access the `req` object in effector logic by using `isServerContext`
 
 ```ts
 import { isServerPageContext } from "nextjs-effector";
@@ -396,15 +395,15 @@ sample({
 
 The place depends on your architecture. But one thing is certain - **creating factories on each page is a really bad idea**. They are designed to simplify and encapsulate the repeated logic parts.
 
-For example, with [`Feature Sliced Design`](https://feature-sliced.design) you might consider creating `layouts` layer, which can be used to create reusable page layouts and factories.
+For example, with [`Feature Sliced Design`](https://feature-sliced.design) you might consider creating a `layouts` layer, which can be used to create reusable page layouts and factories.
 
-### Why in GSSP the shared events are called on each request?
+### Why in GSSP are the shared events called on each request?
 
-`getServerSideProps`, unlike the `getInitialProps`, is run only on server-side. The problem is that `pageEvent` logic may depend on global shared data. So, we need either to run shared events on each request (as we do now), or get this global shared data in some other way, for example by sending it back from the client in a serialized form (sounds risky and hard).
+`getServerSideProps`, unlike the `getInitialProps`, is run only on the server side. The problem is that the `pageEvent` logic may depend on globally shared data. So, we need either to run shared events on each request (as we do now), or get this globally shared data in some other way, for example by sending it back from the client in a serialized form (sounds risky and hard).
 
-Also, to check if shared events are need to be executed, we should either to ask it from the client, or persist this data on server. The both ways sound hard to implement.
+Also, to check if shared events need to be executed, we should either ask it from the client or persist this data on a server. Both ways sound hard to implement.
 
-That's why `getInitialProps` is more recommended way to bind your Effector models to Page lifecycle. When navigating between pages, it runs on client side, so we can easily omit the app event execution.
+That's why `getInitialProps` is the more recommended way to bind your Effector models to the Page lifecycle. When navigating between pages, it runs on the client side, so we can easily omit the app event execution.
 
 ### I need to run sharedEvents and pageEvent in parallel. How can I do that?
 
@@ -425,18 +424,18 @@ sample({
 
 Also, you can use `enhancePageEvent` to run specific events only once in the application lifecycle.
 
-### What do i do if there are bundling issues?
+### What do I do if there are bundling issues?
 
 Since Next.js 12 ESM imports are prioritized over CommonJS imports. While CJS-only dependencies are still supported, it is not recommended to use them, as those can lead to library doubles in the bundle and really weird bugs.
 
 You can read about it [here](https://github.com/effector/next#esm-dependencies-and-library-duplicates-in-the-bundle)
 
-In case if there is a CommonJS-only dependency, which uses effector and you absouletly need it and author can't fix it - you can copy the library to your project as the *last resort measure*.
+In case when there is a CommonJS-only dependency, which uses Effector and you absolutely need it and the author can't fix it - you can copy the library to your project as the *last resort measure*.
 
 #### How to
 
 1. [Download repository](https://github.com/risenforces/nextjs-effector/archive/refs/heads/release/latest.zip)
-2. Copy `library` folder contents into your project, for example into `src/nextjs-effector`
+2. Copy the `src` folder contents into your project, for example into `src/nextjs-effector`
 3. Create the alias using tsconfig.json:
 
    ```json
@@ -460,25 +459,25 @@ Please follow [Conventions](#conventions)
 
 ## Maintenance
 
-The dev branch is `main` - any developer changes is merged in there.
+The dev branch is `main` - any developer changes are merged in there.
 
-Also, there is a `release/latest` branch. It always contains the actual source code for release published with `latest` tag.
+Also, there is a `release/latest` branch. It always contains the actual source code for release published with the `latest` tag.
 
-All changes is made using Pull Requests - push is forbidden. PR can be merged only after successfull `test-and-build` workflow checks.
+All changes are made using Pull Requests - the push is forbidden. PR can be merged only after successful `test-and-build` workflow checks.
 
-When PR is merged, `release-drafter` workflow creates/updates a draft release. The changelog is built from the merged branch scope (`feat`, `fix`, etc) and PR title. When release is ready - we publish the draft.
+When PR is merged, the `release-drafter` workflow creates/updates a draft release. The changelog is built from the merged branch scope (`feat`, `fix`, etc) and PR title. When the release is ready - we publish the draft.
 
 Then, the `release` workflow handles everything:
 
 - It runs tests, builds a package, and publishes it
-- It synchronizes released tag with `release/latest` branch
+- It synchronizes the released tag with the `release/latest` branch
 
 ### Regular flow
 
 1. Create [feature branch](#conventions)
 2. Make changes in your feature branch and [commit](#conventions)
 3. Create a Pull Request from your feature branch to `main`  
-   The PR is needed to test the code before pushing to release branch
+   The PR is needed to test the code before pushing it to the `release` branch
 4. If your PR contains breaking changes, don't forget to put a `BREAKING CHANGES` label
 5. Merge the PR in `main`
 6. All done! Now you have a drafted release - just publish it when ready
@@ -490,18 +489,18 @@ Then, the `release` workflow handles everything:
 3. Create [feature branch](#conventions)
 4. Make changes in your feature branch and [commit](#conventions)
 5. Create a Pull Request from your feature branch to `release/beta`  
-   The PR is needed to test the code before pushing to release branch
-6. Create Github release with tag like `v1.0.0-beta`, pointing to `release/beta` branch  
-   For next `beta` versions use semver build syntax: `v1.0.0-beta+1`
+   The PR is needed to test the code before pushing to `release` branch
+6. Create a GitHub release with a tag like `v1.0.0-beta`, pointing to `release/beta` branch  
+   For the next `beta` versions use semver build syntax: `v1.0.0-beta+1`
 7. After that, the `release` workflow will publish your package with the `beta` tag
-8. When the `beta` version is ready to become `latest` - create a Pull Request from `release/beta` to `main` branch
+8. When the `beta` version is ready to become `latest` - create a Pull Request from `release/beta` to the `main` branch
 9. Continue from the [Regular flow's](#regular-flow) #5 step
 
 ### Conventions
 
 **Feature branches**:
 
-- Should start with `feat/`, `fix/`, `docs/`, `refactor/`, and etc., depending on the changes you want to propose (see [pr-labeler.yml](./.github/pr-labeler.yml) for a full list of scopes)
+- Should start with `feat/`, `fix/`, `docs/`, `refactor/`, etc., depending on the changes you want to propose (see [pr-labeler.yml](./.github/pr-labeler.yml) for a full list of scopes)
 
 **Commits**:
 
@@ -509,6 +508,6 @@ Then, the `release` workflow handles everything:
 
 **Pull requests**:
 
-- Should have human-readable name, for example: "Add a TODO list feature"
+- Should have a human-readable name, for example: "Add a TODO list feature"
 - Should describe changes
 - Should have correct labels
