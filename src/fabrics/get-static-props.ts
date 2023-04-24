@@ -4,12 +4,16 @@ import {
   GetStaticPropsContext,
   GetStaticPropsResult,
   PreviewData,
+  Redirect,
 } from 'next'
 import { ParsedUrlQuery } from 'querystring'
 import { INITIAL_STATE_KEY } from '../constants'
 import { ContextNormalizers } from '../context-normalizers'
 import { isStaticPageEvent } from '../shared'
 import { AnyProps, EmptyOrStaticPageEvent } from '../types'
+
+export type GetStaticPropsExitResult = { redirect: Redirect; revalidate?: number | boolean } | { notFound: true; revalidate?: number | boolean };
+export type GetStaticPropsResultWithoutExit<Props> = Exclude<GetStaticPropsResult<Props>, GetStaticPropsExitResult>;
 
 export interface CreateAppGSPConfig {
   sharedEvents?: EmptyOrStaticPageEvent<any, any>[]
@@ -40,6 +44,7 @@ export interface CreateGSPConfig<
   pageEvent?: EmptyOrStaticPageEvent<Q, D>
   customize?: CustomizeGSP<P, Q, D>
 }
+
 
 export function createGSPFactory({
   sharedEvents = [],
@@ -76,13 +81,13 @@ export function createGSPFactory({
         ? await customize({ scope, context })
         : { props: {} as P }
 
-      const hasProps = 'props' in gspResult
-
       /*
        * Pass 404 and redirects as they are
        */
-      if (!hasProps) {
-        return gspResult
+      if(['notFound', 'redirect'].some(v => v in gspResult)) {
+        return gspResult as GetStaticPropsExitResult
+      } else {
+        (gspResult as GetStaticPropsResultWithoutExit<P>).props = (gspResult as GetStaticPropsResultWithoutExit<P>).props ?? {} as P
       }
 
       /*
@@ -95,7 +100,7 @@ export function createGSPFactory({
       /*
        * Mix serialized Effector Scope values into the user props
        */
-      Object.assign(gspResult.props, effectorProps)
+      Object.assign((gspResult as GetStaticPropsResultWithoutExit<P>).props, effectorProps)
 
       return gspResult
     }
