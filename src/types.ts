@@ -75,4 +75,6 @@ export interface AnyProps {
   [key: string]: any
 }
 
+export type NonPromise<T> = T extends Promise<infer U> ? never : T;
+
 export type GetInitialProps<P> = (context: NextPageContext) => Promise<P>
