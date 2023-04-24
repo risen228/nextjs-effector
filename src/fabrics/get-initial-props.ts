@@ -21,7 +21,7 @@ export interface CustomizeGIPParams {
 
 export type CustomizeGIP<P extends AnyProps = AnyProps> = (
   params: CustomizeGIPParams
-) => P | Promise<P>
+) => void | Promise<void> | P | Promise<P>
 
 export interface CreateGIPConfig<P extends AnyProps = AnyProps> {
   pageEvent?: EmptyOrPageEvent<any, any>
@@ -74,13 +74,15 @@ export function createGIPFactory({
         state.clientScope = scope
       }
 
+      let initialProps = ({} as P)
+
       /*
-       * Get user's GIP props
-       * Fallback to empty object if no custom GIP used
+       * Override with user's initial props when "customize" defined
        */
-      const userProps = customize
-        ? await customize({ scope, context })
-        : ({} as P)
+      if (customize) {
+        const userProps = await customize({ scope, context })
+        if (userProps) initialProps = userProps
+      }
 
       /*
        * Serialize after customize to include user operations
@@ -89,7 +91,7 @@ export function createGIPFactory({
         [INITIAL_STATE_KEY]: serialize(scope),
       }
 
-      return Object.assign(userProps, effectorProps)
+      return Object.assign(initialProps, effectorProps)
     }
   }
 }

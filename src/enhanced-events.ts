@@ -33,7 +33,7 @@ export function enhancePageEvent<P extends AnyPayload>(
     clock: enhancedEvent,
     source: $called,
     filter: (called) => {
-      if (runOnce && called) return false
+      if (runOnce) return !called
       return true
     },
     fn: (_, payload) => payload,

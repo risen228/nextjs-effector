@@ -3,7 +3,7 @@ import {
   GetStaticProps,
   GetStaticPropsContext,
   GetStaticPropsResult,
-  PreviewData,
+  PreviewData
 } from 'next'
 import { ParsedUrlQuery } from 'querystring'
 import { INITIAL_STATE_KEY } from '../constants'
@@ -24,13 +24,15 @@ export interface CustomizeGSPParams<
   context: GetStaticPropsContext<Q, D>
 }
 
+export type LightweightGetStaticPropsResult = Pick<GetStaticPropsResult<any>, 'revalidate'>
+
 export type CustomizeGSP<
   P extends AnyProps = AnyProps,
   Q extends ParsedUrlQuery = ParsedUrlQuery,
   D extends PreviewData = PreviewData
 > = (
   params: CustomizeGSPParams<Q, D>
-) => GetStaticPropsResult<P> | Promise<GetStaticPropsResult<P>>
+) => LightweightGetStaticPropsResult | Promise<LightweightGetStaticPropsResult> | GetStaticPropsResult<P> | Promise<GetStaticPropsResult<P>>
 
 export interface CreateGSPConfig<
   P extends AnyProps,
@@ -68,20 +70,22 @@ export function createGSPFactory({
         await allSettled(event, { scope, params: normalizedContext })
       }
 
-      /*
-       * Get user's GSP result
-       * Fallback to empty props object if no custom GSP used
-       */
-      const gspResult = customize
-        ? await customize({ scope, context })
-        : { props: {} as P }
+      let gspResult: GetStaticPropsResult<P> = { props: {} as P }
 
-      const hasProps = 'props' in gspResult
+      /*
+       * Override with user's GSP result when "customize" defined
+       */
+      if (customize) {
+        const customGspResult = await customize({ scope, context })
+        if ('notFound' in customGspResult) gspResult = customGspResult
+        else if ('redirect' in customGspResult) gspResult = customGspResult
+        else gspResult = { props: {} as P, ...customGspResult }
+      }
 
       /*
        * Pass 404 and redirects as they are
        */
-      if (!hasProps) {
+      if ('notFound' in gspResult || 'redirect' in gspResult) {
         return gspResult
       }
 
