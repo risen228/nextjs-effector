@@ -1,6 +1,6 @@
 import { createEvent, createStore, Event, sample } from 'effector'
 import { useUnit } from 'effector-react'
-import { useRouter } from 'next/router.js'
+import * as NextRouter from 'next/router.js'
 import { useEffect } from 'react'
 import { ContextNormalizers } from './context-normalizers'
 import { assertStrict } from './shared'
@@ -9,6 +9,8 @@ import { EmptyOrPageEvent, PageContext, StaticPageContext } from './types'
 export interface EnhancedEventOptions {
   runOnce?: boolean
 }
+
+const useRouter = NextRouter.useRouter;
 
 const enhancedEventsCache = new Map<string, Event<any>>()
 
