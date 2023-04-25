@@ -30,7 +30,7 @@ yarn add nextjs-effector @effector/next effector-react effector
 
 ### Examples
 
-- [Test App](/apps/test-app) - used for testing the `nestjs-effector` library. You can find some architecture notes in [README](/apps/test-app/README.md).
+- [Test App](/apps/test-app) - used for testing the `nextjs-effector` library. You can find some architecture notes in [README](/apps/test-app/README.md).
 
 ### Initial setup
 
