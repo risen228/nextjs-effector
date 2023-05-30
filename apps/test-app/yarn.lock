@@ -278,10 +278,10 @@
     "@babel/helper-validator-identifier" "^7.19.1"
     to-fast-properties "^2.0.0"
 
-"@effector/next@^0.3.0":
-  version "0.3.0"
-  resolved "https://registry.yarnpkg.com/@effector/next/-/next-0.3.0.tgz#e26434969c6d5826fd8aa55f74de990646df71e8"
-  integrity sha512-e3WuX96SvH9AoGhN1PDraXiaFXnow/ZiNlTtOiLzMcY3TXhhBYXgDZOnS5n2BtUtz4GvC3/mTaYrmtxXUUtnFQ==
+"@effector/next@^0.5.0":
+  version "0.5.0"
+  resolved "https://registry.yarnpkg.com/@effector/next/-/next-0.5.0.tgz#741fbd61ae10b86d6e1fffe20d01929433e5ae21"
+  integrity sha512-S8J07MMfuRUNt9xLZVp45OKjL3twYv/hhRctY8PqT9XGer4KxJSCAbQK/pC8QuZqL8N5yW+ZPKNeT1MlRaz0BA==
 
 "@eslint-community/eslint-utils@^4.1.2", "@eslint-community/eslint-utils@^4.2.0", "@eslint-community/eslint-utils@^4.3.0":
   version "4.4.0"
