@@ -10,7 +10,7 @@
     "use-local": "node use-local.mjs"
   },
   "dependencies": {
-    "@effector/next": "^0.3.0",
+    "@effector/next": "^0.5.0",
     "@fontsource/acme": "^4.5.10",
     "@fontsource/fira-mono": "^4.5.10",
     "@types/node": "18.15.13",
@@ -35,7 +35,7 @@
     "zx": "^7.2.1"
   },
   "resolutions": {
-    "@effector/next": "^0.3.0",
+    "@effector/next": "^0.5.0",
     "effector": "^22.8.1",
     "effector-react": "^22.5.1"
   },
