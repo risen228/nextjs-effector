@@ -154,6 +154,17 @@ export const createGIP = createGIPFactory({
   // By default, the library just uses fork(), like below
   // But you can fill the stores in scope with your values (cookies, for example)
   createServerScope: () => fork(),
+  
+  // The second argument in https://effector.dev/docs/api/effector/serialize
+  serializeOptions: { ... },
+
+  // You can define your custom logic using the "customize" function
+  // It's run after all events are settled but before Scope serialization
+  // So, here you can safely call allSettled
+  async customize({ scope, context }) {
+    // You can also return nothing (there will be no impact on props in this case)
+    return { /* Props */ };
+  },
 });
 
 /*
@@ -166,13 +177,8 @@ Page.getInitialProps = createGIP({
   // - Client side on navigation (even if already called)
   pageEvent: pageStarted,
 
-  // You can define your custom logic using the "customize" function
-  // It's run after all events are settled but before Scope serialization
-  // So, here you can safely call allSettled
-  async customize({ scope, context }) {
-    // You can also return nothing (there will be no impact on props in this case)
-    return { /* Props */ };
-  },
+  // The same as on factory level
+  async customize({ scope, context }) { ... },
 });
 ```
 
@@ -198,6 +204,17 @@ export const pageStarted = createEvent<PageContext<Props, Params, Query>>();
 export const createGSSP = createGSSPFactory({
   // Will be called on the first request and each page navigation (always on the server side)
   sharedEvents: [appStarted],
+
+  // The second argument in https://effector.dev/docs/api/effector/serialize
+  serializeOptions: { ... },
+
+  // You can define your custom logic using the "customize" function
+  // It's run after all events are settled but before Scope serialization
+  // So, here you can safely call allSettled
+  customize({ scope, context }) {
+    // You can omit the "props" field (there will be no impact on props in this case)
+    return { /* GSSP Result */ };
+  },
 });
 
 /*
@@ -209,13 +226,8 @@ export const getServerSideProps = createGSSP({
   // Always called after shared events
   pageEvent: pageStarted,
 
-  // You can define your custom logic using the "customize" function
-  // It's run after all events are settled but before Scope serialization
-  // So, here you can safely call allSettled
-  customize({ scope, context }) {
-    // You can omit the "props" field (there will be no impact on props in this case)
-    return { /* GSSP Result */ };
-  },
+  // The same as on factory level
+  customize({ scope, context }) { ... },
 });
 ```
 
@@ -250,9 +262,13 @@ export const getStaticProps = createGSP({
   // Will be called on each page generation (always on the server side)
   pageEvent: pageStarted,
 
+  // The second argument in https://effector.dev/docs/api/effector/serialize
+  serializeOptions: { ... },
+
   // You can define your custom logic using the "customize" function
   // It's run after all events are settled but before Scope serialization
   // So, here you can safely call allSettled
+  // Important: due to complex types, this method is not available on factory level like in GIP and GSSP
   customize({ scope, context }) {
     // You can omit the "props" field (there will be no impact on props in this case)
     return { /* GSP Result */ };
@@ -397,6 +413,26 @@ sample({
 The place depends on your architecture. But one thing is certain - **creating factories on each page is a really bad idea**. They are designed to simplify and encapsulate the repeated logic parts.
 
 For example, with [`Feature Sliced Design`](https://feature-sliced.design) you might consider creating a `layouts` layer, which can be used to create reusable page layouts and factories.
+
+### How are multiple customize work?
+
+GIP:
+
+1. Execute factory-level `customize` and save result
+2. Execute page-level `customize` and save result
+3. Merge results (page-level priority is higher)
+4. Merge `nextjs-effector` props inside and return the result from GIP
+
+GSSP:
+
+1. Execute factory-level `customize` and save result
+2. It has `redirect` field? Return the result from GSSP
+3. It has `notFound` field? Return the result from GSSP
+4. Execute page-level `customize` and save result 
+5. It has `redirect` field? Return the result from GSSP
+6. It has `notFound` field? Return the result from GSSP
+7. Deep merge results (page-level priority is higher)
+8. Merge `nextjs-effector` props inside and return the result from GSSP
 
 ### Why in GSSP are the shared events called on each request?
 

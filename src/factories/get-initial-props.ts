@@ -1,4 +1,4 @@
-import { allSettled, fork, Scope, serialize } from 'effector'
+import { allSettled, fork, Scope, serialize, Store } from 'effector'
 import { NextPageContext } from 'next'
 import { INITIAL_STATE_KEY } from '../constants'
 import { ContextNormalizers } from '../context-normalizers'
@@ -11,7 +11,9 @@ import { AnyProps, EmptyOrPageEvent, GetInitialProps } from '../types'
 export interface CreateAppGIPConfig {
   sharedEvents?: EmptyOrPageEvent[]
   runSharedOnce?: boolean
-  createServerScope?: (context: NextPageContext) => Scope
+  createServerScope?: (context: NextPageContext) => Scope | Promise<Scope>
+  customize?: CustomizeGIP
+  serializeOptions?: Parameters<typeof serialize>[1]
 }
 
 export interface CustomizeGIPParams {
@@ -32,6 +34,8 @@ export function createGIPFactory({
   sharedEvents = [],
   runSharedOnce = true,
   createServerScope = () => fork(),
+  customize: factoryCustomize,
+  serializeOptions
 }: CreateAppGIPConfig = {}) {
   /*
    * When "runSharedOnce" is equals to "true",
@@ -44,7 +48,7 @@ export function createGIPFactory({
 
   return function createGIP<P extends AnyProps = AnyProps>({
     pageEvent,
-    customize,
+    customize: pageCustomize,
   }: CreateGIPConfig<P> = {}): GetInitialProps<P> {
     return async function getInitialProps(context) {
       /*
@@ -59,7 +63,7 @@ export function createGIPFactory({
 
       const normalizedContext = ContextNormalizers.getInitialProps(context)
 
-      const scope = state.clientScope ?? createServerScope(context)
+      const scope = state.clientScope ?? await createServerScope(context)
 
       for (const event of events) {
         await allSettled(event, { scope, params: normalizedContext })
@@ -73,22 +77,16 @@ export function createGIPFactory({
         // eslint-disable-next-line require-atomic-updates
         state.clientScope = scope
       }
-
-      let initialProps = ({} as P)
-
-      /*
-       * Override with user's initial props when "customize" defined
-       */
-      if (customize) {
-        const userProps = await customize({ scope, context })
-        if (userProps) initialProps = userProps
-      }
+      
+      const factoryGipResult = await factoryCustomize?.({ scope, context }) ?? {} as P
+      const pageGipResult = await pageCustomize?.({ scope, context }) ?? {} as P
+      const initialProps: P = { ...factoryGipResult, ...pageGipResult }
 
       /*
        * Serialize after customize to include user operations
        */
       const effectorProps = {
-        [INITIAL_STATE_KEY]: serialize(scope),
+        [INITIAL_STATE_KEY]: serialize(scope, serializeOptions),
       }
 
       return Object.assign(initialProps, effectorProps)
