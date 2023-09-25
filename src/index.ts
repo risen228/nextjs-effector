@@ -7,11 +7,11 @@ export type {
   CustomizeGSPParams,
   CustomizeGSSP,
   CustomizeGSSPParams,
-} from './fabrics'
+} from './factories'
 export {
   createGIPFactory,
   createGSPFactory,
   createGSSPFactory,
-} from './fabrics'
+} from './factories'
 export * from './types'
 export { withEffector } from './with-effector'

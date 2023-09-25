@@ -13,7 +13,8 @@ import { AnyProps, EmptyOrStaticPageEvent } from '../types'
 
 export interface CreateAppGSPConfig {
   sharedEvents?: EmptyOrStaticPageEvent<any, any>[]
-  createServerScope?: (context: GetStaticPropsContext) => Scope
+  createServerScope?: (context: GetStaticPropsContext) => Scope | Promise<Scope>
+  serializeOptions?: Parameters<typeof serialize>[1]
 }
 
 export interface CustomizeGSPParams<
@@ -46,6 +47,7 @@ export interface CreateGSPConfig<
 export function createGSPFactory({
   sharedEvents = [],
   createServerScope = () => fork(),
+  serializeOptions
 }: CreateAppGSPConfig = {}) {
   return function createGSP<
     P extends AnyProps = AnyProps,
@@ -64,7 +66,7 @@ export function createGSPFactory({
 
       const normalizedContext = ContextNormalizers.getStaticProps(context)
 
-      const scope = createServerScope(context)
+      const scope = await createServerScope(context)
 
       for (const event of events) {
         await allSettled(event, { scope, params: normalizedContext })
@@ -93,7 +95,7 @@ export function createGSPFactory({
        * Serialize after customize to include user operations
        */
       const effectorProps = {
-        [INITIAL_STATE_KEY]: serialize(scope),
+        [INITIAL_STATE_KEY]: serialize(scope, serializeOptions),
       }
 
       /*
