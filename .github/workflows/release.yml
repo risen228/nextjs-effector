@@ -33,51 +33,51 @@ jobs:
       branch: ${{ steps.branch-name.outputs.value }}
       branch-exists: ${{ steps.branch-exists.outputs.flag == '1' }}
 
-  sync-and-release:
-    runs-on: ubuntu-latest
-    needs: get-meta
-    if: needs.get-meta.outputs.branch == 'release/latest'
-    steps:
-      - name: Setup git
-        run: |
-          git config --global user.name "GitHub Actions Bot"
-          git config --global user.email "<>"
+  # sync-and-release:
+  #   runs-on: ubuntu-latest
+  #   needs: get-meta
+  #   if: needs.get-meta.outputs.branch == 'release/latest'
+  #   steps:
+  #     - name: Setup git
+  #       run: |
+  #         git config --global user.name "GitHub Actions Bot"
+  #         git config --global user.email "<>"
 
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
+  #     - name: Checkout
+  #       uses: actions/checkout@v3
+  #       with:
+  #         fetch-depth: 0
 
-      - name: Create branch
-        if: ${{ needs.get-meta.outputs.branch-exists == 'false' }}
-        run: |
-          git checkout -b ${{ needs.get-meta.outputs.branch }}
-          git push -u origin ${{ needs.get-meta.outputs.branch }}
+  #     - name: Create branch
+  #       if: ${{ needs.get-meta.outputs.branch-exists == 'false' }}
+  #       run: |
+  #         git checkout -b ${{ needs.get-meta.outputs.branch }}
+  #         git push -u origin ${{ needs.get-meta.outputs.branch }}
 
-      - name: Checkout branch
-        if: ${{ needs.get-meta.outputs.branch-exists == 'true' }}
-        run: git checkout ${{ needs.get-meta.outputs.branch }} 
+  #     - name: Checkout branch
+  #       if: ${{ needs.get-meta.outputs.branch-exists == 'true' }}
+  #       run: git checkout ${{ needs.get-meta.outputs.branch }} 
 
-      - name: Override branch using tag HEAD
-        run: git reset --hard ${{ needs.get-meta.outputs.tag }}
+  #     - name: Override branch using tag HEAD
+  #       run: git reset --hard ${{ needs.get-meta.outputs.tag }}
 
-      - name: Push to protected branch
-        uses: CasperWA/push-protected@v2
-        env:
-          TOKEN: ${{ secrets.FULL_ACCESS_GITHUB_TOKEN }}
-        if: ${{ env.TOKEN != '' }}
-        with:
-          token: ${{ secrets.FULL_ACCESS_GITHUB_TOKEN }}
-          branch: ${{ needs.get-meta.outputs.branch }}
-          tags: true
-          force: true
-          unprotect_reviews: true
+  #     - name: Push to protected branch
+  #       uses: CasperWA/push-protected@v2
+  #       env:
+  #         TOKEN: ${{ secrets.FULL_ACCESS_GITHUB_TOKEN }}
+  #       if: ${{ env.TOKEN != '' }}
+  #       with:
+  #         token: ${{ secrets.FULL_ACCESS_GITHUB_TOKEN }}
+  #         branch: ${{ needs.get-meta.outputs.branch }}
+  #         tags: true
+  #         force: true
+  #         unprotect_reviews: true
   
-      - name: Push to unprotected branch
-        env:
-          TOKEN: ${{ secrets.FULL_ACCESS_GITHUB_TOKEN }}
-        if: ${{ env.TOKEN == '' }}
-        run: git push --tags --force
+  #     - name: Push to unprotected branch
+  #       env:
+  #         TOKEN: ${{ secrets.FULL_ACCESS_GITHUB_TOKEN }}
+  #       if: ${{ env.TOKEN == '' }}
+  #       run: git push --tags --force
 
   release:
     runs-on: ubuntu-latest
