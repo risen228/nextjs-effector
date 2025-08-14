@@ -95,7 +95,7 @@ jobs:
 
       - name: Build package
         run: |
-          yarn install --frozen-lockfile
+          yarn install
           yarn test
           yarn build
 
