@@ -4,3 +4,4 @@ dist
 .next
 .idea
 .rollup.cache
+.yarn/install-state.gz

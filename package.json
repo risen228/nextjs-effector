@@ -5,7 +5,6 @@
   "repository": "git@github.com:risenforces/nextjs-effector.git",
   "author": "Evgeny Zakharov <to@risen.dev>",
   "license": "MIT",
-  "private": false,
   "type": "module",
   "main": "index.umd.cjs",
   "module": "index.js",
@@ -28,7 +27,7 @@
     "build": "yarn build:code && yarn build:types"
   },
   "devDependencies": {
-    "@effector/next": "^0.3.0",
+    "@effector/next": "0.7.1",
     "@types/react": "^18.0.37",
     "@vitejs/plugin-react": "^4.0.0",
     "effector": "^22.8.1",
