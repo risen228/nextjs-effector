@@ -16,8 +16,7 @@ jobs:
           registry-url: https://registry.npmjs.org/
 
       - name: Test and build
-        if: steps.cache.outputs.cache-hit != 'true'
         run: |
-          yarn install --frozen-lockfile
+          yarn install
           yarn test
           yarn build
